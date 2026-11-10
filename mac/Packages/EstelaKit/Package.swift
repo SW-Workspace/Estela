@@ -9,14 +9,17 @@ let package = Package(
         .library(name: "EstelaDomain", targets: ["EstelaDomain"]),
         .library(name: "EstelaData", targets: ["EstelaData"]),
         .library(name: "EstelaDesignSystem", targets: ["EstelaDesignSystem"]),
+        .library(name: "EstelaPresentation", targets: ["EstelaPresentation"]),
     ],
     targets: [
         .target(name: "EstelaDomain"),
         .target(name: "EstelaData", dependencies: ["EstelaDomain"]),
         .target(name: "EstelaDesignSystem", resources: [.copy("Resources/Fonts")]),
+        .target(name: "EstelaPresentation", dependencies: ["EstelaDomain", "EstelaDesignSystem"]),
         .testTarget(name: "EstelaDomainTests", dependencies: ["EstelaDomain"]),
         .testTarget(name: "EstelaDataTests", dependencies: ["EstelaData"]),
         .testTarget(name: "EstelaDesignSystemTests", dependencies: ["EstelaDesignSystem"]),
+        .testTarget(name: "EstelaPresentationTests", dependencies: ["EstelaPresentation"]),
     ],
     swiftLanguageModes: [.v6]
 )
