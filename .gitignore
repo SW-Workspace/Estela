@@ -1,0 +1,8 @@
+/target/
+/wl/target/
+*.log
+.env
+pgdata/
+claude/
+codex/
+.claude/

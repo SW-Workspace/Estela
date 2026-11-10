@@ -1,0 +1,7 @@
+name: nightly-hw — integration pending
+on: workflow_dispatch
+jobs:
+  pending:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: echo "nightly-hw integration pending; see wl/reference/phase-1-status.md" && exit 1

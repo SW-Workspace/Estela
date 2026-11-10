@@ -1,0 +1,3 @@
+Estela
+Planned commands: probe, validate, extract, render-frame, export
+Integration pending: these commands are not implemented yet.

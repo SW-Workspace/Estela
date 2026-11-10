@@ -1,0 +1,62 @@
+{
+  "estela-model": [],
+  "estela-format": [
+    "estela-model"
+  ],
+  "estela-timeline": [
+    "estela-model"
+  ],
+  "estela-motion": [
+    "estela-model"
+  ],
+  "estela-render": [
+    "estela-model",
+    "estela-motion",
+    "estela-media"
+  ],
+  "estela-media": [
+    "estela-model"
+  ],
+  "estela-media-ffmpeg": [
+    "estela-media"
+  ],
+  "estela-capture": [
+    "estela-model",
+    "estela-media"
+  ],
+  "estela-audio": [
+    "estela-model",
+    "estela-media"
+  ],
+  "estela-engine": [
+    "estela-timeline",
+    "estela-motion",
+    "estela-render",
+    "estela-format",
+    "estela-capture",
+    "estela-media",
+    "estela-audio",
+    "estela-media-ffmpeg",
+    "estela-platform-win",
+    "estela-platform-linux"
+  ],
+  "estela-library": [
+    "estela-format"
+  ],
+  "estela-app": [
+    "estela-engine",
+    "estela-library"
+  ],
+  "estela-cli": [
+    "estela-engine",
+    "estela-library"
+  ],
+  "estela-platform-win": [
+    "estela-capture",
+    "estela-media"
+  ],
+  "estela-platform-linux": [
+    "estela-capture",
+    "estela-media"
+  ]
+}

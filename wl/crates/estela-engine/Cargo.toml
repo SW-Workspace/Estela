@@ -1,0 +1,23 @@
+[package]
+name = "estela-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+estela-timeline.workspace = true
+estela-motion.workspace = true
+estela-render.workspace = true
+estela-format.workspace = true
+estela-capture.workspace = true
+estela-media.workspace = true
+estela-audio.workspace = true
+estela-media-ffmpeg.workspace = true
+thiserror.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+estela-platform-win.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+estela-platform-linux.workspace = true

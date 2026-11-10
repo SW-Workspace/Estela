@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-estela">
+    <comment>Estela project</comment>
+    <comment xml:lang="es">Proyecto de Estela</comment>
+    <glob pattern="*.estela"/>
+    <magic priority="60"><match type="string" offset="4" value="ftypestl"/></magic>
+  </mime-type>
+</mime-info>

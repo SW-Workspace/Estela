@@ -1,0 +1,40 @@
+# Replace placeholders before using flatpak-builder.
+app-id: app.estela.Estela
+runtime: org.freedesktop.Platform
+runtime-version: '@RUNTIME_VERSION@'
+sdk: org.freedesktop.Sdk
+command: estela-app
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --socket=pulseaudio
+modules:
+  - name: ffmpeg-lgpl
+    buildsystem: autotools
+    config-opts:
+      - --disable-gpl
+      - --disable-nonfree
+      - --enable-shared
+      - --disable-static
+    sources:
+      - type: archive
+        url: '@FFMPEG_SOURCE_URL@'
+        sha256: '@FFMPEG_SHA256@'
+  - name: postgresql
+    buildsystem: autotools
+    config-opts:
+      - --with-icu
+    sources:
+      - type: archive
+        url: '@POSTGRES_SOURCE_URL@'
+        sha256: '@POSTGRES_SHA256@'
+  - name: estela
+    buildsystem: simple
+    build-commands:
+      - cargo build --release --locked --offline --package estela-app
+      - install -Dm755 target/release/estela-app /app/bin/estela-app
+    sources:
+      - type: dir
+        path: ../../..
+      # Vendor Cargo sources before running the offline build.

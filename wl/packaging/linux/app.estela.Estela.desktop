@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Estela
+Comment=Screen recorder
+Comment[es]=Grabador de pantalla
+Exec=estela-app %f
+Icon=app.estela.Estela
+MimeType=application/x-estela;
+Categories=AudioVideo;Recorder;
+Terminal=false

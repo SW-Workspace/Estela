@@ -1,0 +1,38 @@
+[workspace]
+resolver = "2"
+members = ["crates/*", "xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.99.1"
+publish = false
+
+[workspace.dependencies]
+crossbeam-channel = "=0.5.15"
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.150"
+thiserror = "=2.0.18"
+ulid = { version = "=1.2.1", features = ["serde"] }
+
+estela-model = { path = "crates/estela-model" }
+estela-format = { path = "crates/estela-format" }
+estela-timeline = { path = "crates/estela-timeline" }
+estela-motion = { path = "crates/estela-motion" }
+estela-render = { path = "crates/estela-render" }
+estela-media = { path = "crates/estela-media" }
+estela-media-ffmpeg = { path = "crates/estela-media-ffmpeg" }
+estela-capture = { path = "crates/estela-capture" }
+estela-audio = { path = "crates/estela-audio" }
+estela-engine = { path = "crates/estela-engine" }
+estela-library = { path = "crates/estela-library" }
+estela-platform-win = { path = "crates/estela-platform-win" }
+estela-platform-linux = { path = "crates/estela-platform-linux" }
+estela-app = { path = "crates/estela-app" }
+estela-cli = { path = "crates/estela-cli" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+debug = "line-tables-only"
+

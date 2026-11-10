@@ -1,0 +1,3 @@
+Estela
+Comandos previstos: probe, validate, extract, render-frame, export
+Integración pendiente: estos comandos todavía no están implementados.

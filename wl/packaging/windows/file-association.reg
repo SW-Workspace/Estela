@@ -1,0 +1,9 @@
+Windows Registry Editor Version 5.00
+
+; Replace C:\Estela with the installation path before use.
+[HKEY_CURRENT_USER\Software\Classes\.estela]
+@="Estela.Project"
+[HKEY_CURRENT_USER\Software\Classes\Estela.Project]
+@="Proyecto de Estela"
+[HKEY_CURRENT_USER\Software\Classes\Estela.Project\shell\open\command]
+@="\"C:\\Estela\\estela-app.exe\" \"%1\""

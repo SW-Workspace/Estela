@@ -1,0 +1,15 @@
+[package]
+name = "estela-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+estela-engine.workspace = true
+estela-library.workspace = true
+thiserror.workspace = true
+
+[[bin]]
+name = "estela"
+path = "src/main.rs"

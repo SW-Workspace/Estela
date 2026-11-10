@@ -1,0 +1,11 @@
+[package]
+name = "estela-platform-linux"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+estela-capture.workspace = true
+estela-media.workspace = true
+thiserror.workspace = true
