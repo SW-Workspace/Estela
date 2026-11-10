@@ -28,8 +28,10 @@ struct CopyCatalogTests {
         .appending(path: "../../../../Estela/Localizable.xcstrings")
         .standardized
 
+    private static let catalog = try? JSONDecoder().decode(StringCatalog.self, from: Data(contentsOf: catalogURL))
+
     private func loadCatalog() throws -> StringCatalog {
-        try JSONDecoder().decode(StringCatalog.self, from: Data(contentsOf: Self.catalogURL))
+        try #require(Self.catalog)
     }
 
     @Test func sourceLanguageIsEnglish() throws {

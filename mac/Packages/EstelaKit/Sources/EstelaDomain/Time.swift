@@ -2,6 +2,7 @@ public struct Time: Hashable, Comparable, Sendable {
     public static let zero = Time(nanoseconds: 0)
 
     private static let nanosecondsPerSecond: Double = 1_000_000_000
+    private static let representableNanoseconds = Double(Int64.min)..<Double(Int64.max)
 
     public let nanoseconds: Int64
 
@@ -9,8 +10,10 @@ public struct Time: Hashable, Comparable, Sendable {
         self.nanoseconds = nanoseconds
     }
 
-    public init(seconds: Double) {
-        self.nanoseconds = Int64((seconds * Self.nanosecondsPerSecond).rounded())
+    public init?(seconds: Double) {
+        let nanoseconds = (seconds * Self.nanosecondsPerSecond).rounded()
+        guard Self.representableNanoseconds.contains(nanoseconds) else { return nil }
+        self.nanoseconds = Int64(nanoseconds)
     }
 
     public var seconds: Double {

@@ -16,7 +16,7 @@ struct EstelaApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        Window("main.title", id: "main") {
             MainWindowView()
                 .preferredColorScheme(.dark)
         }

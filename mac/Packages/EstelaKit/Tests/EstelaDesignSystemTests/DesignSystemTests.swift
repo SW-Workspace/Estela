@@ -4,10 +4,12 @@ import SwiftUI
 import Testing
 
 struct DesignSystemTests {
-    @Test func registersInterSoItResolvesByFamilyName() throws {
+    @Test func resolvesInterFromTheBundledFiles() throws {
         try FontRegistry.registerBundledFonts()
-        let members = NSFontManager.shared.availableMembers(ofFontFamily: FontFamily.primary) ?? []
-        #expect(!members.isEmpty)
+        let font = try #require(NSFont(name: "InterVariable", size: FontSize.body))
+        let fontURL = try #require(CTFontCopyAttribute(font, kCTFontURLAttribute) as? URL)
+        #expect(font.familyName == FontFamily.primary)
+        #expect(fontURL.standardizedFileURL.path().hasPrefix(Bundle.module.bundleURL.standardizedFileURL.path()))
     }
 
     @Test func registrationIsIdempotent() throws {

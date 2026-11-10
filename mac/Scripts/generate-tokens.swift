@@ -4,12 +4,14 @@ import Foundation
 
 enum GenerationError: Error, CustomStringConvertible {
     case missingGroup(String)
+    case invalidGroupValues(String)
     case invalidColor(String)
     case offGrid(String, Int)
 
     var description: String {
         switch self {
         case .missingGroup(let group): "Missing token group: \(group)"
+        case .invalidGroupValues(let group): "Token group \(group) has values of the wrong type"
         case .invalidColor(let name): "Invalid hex color for token: \(name)"
         case .offGrid(let name, let value): "Token \(name) = \(value) is not on the 4 px grid"
         }
@@ -25,7 +27,8 @@ let outputFile = repositoryRoot.appending(
 )
 
 func group<Value>(_ name: String, in tokens: [String: Any]) throws -> [(String, Value)] {
-    guard let values = tokens[name] as? [String: Value] else { throw GenerationError.missingGroup(name) }
+    guard let rawValues = tokens[name] else { throw GenerationError.missingGroup(name) }
+    guard let values = rawValues as? [String: Value] else { throw GenerationError.invalidGroupValues(name) }
     return values.sorted { $0.key < $1.key }
 }
 

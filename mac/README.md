@@ -7,7 +7,7 @@ Rules for contributors and agents: [AGENTS.md](AGENTS.md).
 
 - macOS 15 or later.
 - Xcode 16 or later (Swift 6).
-- SwiftLint (`brew install swiftlint`).
+- SwiftLint 0.65.1 (the version CI pins).
 
 ## Layout
 

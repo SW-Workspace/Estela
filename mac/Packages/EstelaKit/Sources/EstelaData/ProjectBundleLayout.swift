@@ -1,8 +1,6 @@
 import Foundation
 
-public struct ProjectBundleLayout: Sendable, Equatable {
-    public static let fileExtension = "estela"
-
+public struct ProjectBundleLayout: Sendable {
     public let root: URL
 
     public init(root: URL) {

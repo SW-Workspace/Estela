@@ -7,12 +7,19 @@ on:
 jobs:
   check:
     runs-on: macos-latest
+    env:
+      SWIFTLINT_VERSION: 0.65.1
     defaults:
       run:
         working-directory: mac
     steps:
       - uses: actions/checkout@v4
-      - run: brew install swiftlint
+      - name: Install SwiftLint
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/swiftlint.zip" \
+            "https://github.com/realm/SwiftLint/releases/download/$SWIFTLINT_VERSION/portable_swiftlint.zip"
+          unzip -q "$RUNNER_TEMP/swiftlint.zip" -d "$RUNNER_TEMP/swiftlint"
+          echo "$RUNNER_TEMP/swiftlint" >> "$GITHUB_PATH"
       - run: swiftlint --strict
       - name: Design tokens are up to date
         run: swift Scripts/generate-tokens.swift && git diff --exit-code

@@ -28,9 +28,22 @@ final class MainWindowUITests: XCTestCase {
     @MainActor
     private func launch(language: String) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-AppleLanguages", "(\(language))", "-AppleLocale", language]
+        app.launchArguments = [
+            "-AppleLanguages", "(\(language))",
+            "-AppleLocale", language,
+            "-ApplePersistenceIgnoreState", "YES",
+        ]
         app.launch()
-        XCTAssertTrue(app.staticTexts["main.title"].waitForExistence(timeout: Self.launchTimeout))
+        XCTAssertTrue(app.staticTexts["main.title"].waitForExistence(timeout: Self.launchTimeout), app.debugDescription)
+        attachScreenshot(of: app, named: "main-window-\(language)")
         return app
+    }
+
+    @MainActor
+    private func attachScreenshot(of app: XCUIApplication, named name: String) {
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }
