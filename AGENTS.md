@@ -2,6 +2,7 @@
 
 Rules for any agent or contributor working on Estela for **Windows and Linux**.
 macOS uses **Swift only**, never Rust, and is out of scope for this file.
+macOS work follows [mac/AGENTS.md](mac/AGENTS.md).
 All Rust code, crates, build configuration and tooling live inside `wl/`.
 This file lives at the repository root. There is no `docs/` directory for now;
 keep architecture and development documentation in root or `wl/` Markdown files.
