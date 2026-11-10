@@ -8,12 +8,15 @@ let package = Package(
     products: [
         .library(name: "EstelaDomain", targets: ["EstelaDomain"]),
         .library(name: "EstelaData", targets: ["EstelaData"]),
+        .library(name: "EstelaDesignSystem", targets: ["EstelaDesignSystem"]),
     ],
     targets: [
         .target(name: "EstelaDomain"),
         .target(name: "EstelaData", dependencies: ["EstelaDomain"]),
+        .target(name: "EstelaDesignSystem", resources: [.copy("Resources/Fonts")]),
         .testTarget(name: "EstelaDomainTests", dependencies: ["EstelaDomain"]),
         .testTarget(name: "EstelaDataTests", dependencies: ["EstelaData"]),
+        .testTarget(name: "EstelaDesignSystemTests", dependencies: ["EstelaDesignSystem"]),
     ],
     swiftLanguageModes: [.v6]
 )
