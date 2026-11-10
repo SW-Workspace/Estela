@@ -1,6 +1,24 @@
+@testable import EstelaPresentation
 import Foundation
 import Testing
-@testable import EstelaPresentation
+
+private struct StringCatalog: Decodable {
+    let sourceLanguage: String
+    let strings: [String: StringCatalogEntry]
+}
+
+private struct StringCatalogEntry: Decodable {
+    let localizations: [String: StringCatalogLocalization]?
+}
+
+private struct StringCatalogLocalization: Decodable {
+    let stringUnit: StringCatalogUnit
+}
+
+private struct StringCatalogUnit: Decodable {
+    let state: String
+    let value: String
+}
 
 struct CopyCatalogTests {
     private static let requiredLanguages = ["en", "es"]
@@ -10,26 +28,8 @@ struct CopyCatalogTests {
         .appending(path: "../../../../Estela/Localizable.xcstrings")
         .standardized
 
-    private struct Catalog: Decodable {
-        struct Entry: Decodable {
-            let localizations: [String: Localization]?
-        }
-
-        struct Localization: Decodable {
-            let stringUnit: StringUnit
-        }
-
-        struct StringUnit: Decodable {
-            let state: String
-            let value: String
-        }
-
-        let sourceLanguage: String
-        let strings: [String: Entry]
-    }
-
-    private func loadCatalog() throws -> Catalog {
-        try JSONDecoder().decode(Catalog.self, from: Data(contentsOf: Self.catalogURL))
+    private func loadCatalog() throws -> StringCatalog {
+        try JSONDecoder().decode(StringCatalog.self, from: Data(contentsOf: Self.catalogURL))
     }
 
     @Test func sourceLanguageIsEnglish() throws {

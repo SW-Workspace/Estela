@@ -1,7 +1,7 @@
 import AppKit
+@testable import EstelaDesignSystem
 import SwiftUI
 import Testing
-@testable import EstelaDesignSystem
 
 struct DesignSystemTests {
     @Test func registersInterSoItResolvesByFamilyName() throws {

@@ -1,0 +1,35 @@
+included:
+  - Estela
+  - EstelaUITests
+  - Packages/EstelaKit/Sources
+  - Packages/EstelaKit/Tests
+  - Packages/EstelaKit/Package.swift
+  - Scripts
+
+excluded:
+  - Packages/EstelaKit/.build
+  - .build
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - trailing_closure
+  - sorted_imports
+  - explicit_init
+  - first_where
+  - contains_over_first_not_nil
+  - empty_count
+  - fatal_error_message
+
+disabled_rules:
+  - identifier_name
+
+line_length:
+  warning: 120
+  error: 120
+
+trailing_comma:
+  mandatory_comma: true
+
+force_cast: error
+force_try: error

@@ -1,6 +1,6 @@
+@testable import EstelaData
 import Foundation
 import Testing
-@testable import EstelaData
 
 struct ProjectBundleLayoutTests {
     private let layout = ProjectBundleLayout(root: URL(filePath: "/tmp/Demo.estela", directoryHint: .isDirectory))

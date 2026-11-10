@@ -1,5 +1,5 @@
-import Testing
 @testable import EstelaDomain
+import Testing
 
 struct TimeTests {
     @Test func convertsSecondsToNanoseconds() {

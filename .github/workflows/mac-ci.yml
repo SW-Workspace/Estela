@@ -1,0 +1,22 @@
+name: macOS
+on:
+  push:
+    paths: ["mac/**", "assets/**", ".github/workflows/mac-ci.yml"]
+  pull_request:
+    paths: ["mac/**", "assets/**", ".github/workflows/mac-ci.yml"]
+jobs:
+  check:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mac
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install swiftlint
+      - run: swiftlint --strict
+      - name: Design tokens are up to date
+        run: swift Scripts/generate-tokens.swift && git diff --exit-code
+      - run: swift test --package-path Packages/EstelaKit
+      - run: >
+          xcodebuild -project Estela.xcodeproj -scheme Estela -destination 'platform=macOS'
+          -derivedDataPath .build/DerivedData build test
