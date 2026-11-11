@@ -1,5 +1,5 @@
 use iced::{
-    widget::{button, container, mouse_area, row, text, tooltip},
+    widget::{button, container, mouse_area, row, space, text, tooltip},
     Alignment, Element, Length,
 };
 
@@ -22,7 +22,7 @@ pub(crate) fn view(app: &App) -> Element<'_, Message> {
         ready(app)
     };
     mouse_area(
-        container(container(controls).center(Length::Fill))
+        container(container(controls).center_y(Length::Fill))
             .padding([8, 12])
             .width(Length::Fill)
             .height(HEIGHT)
@@ -85,6 +85,7 @@ fn ready(app: &App) -> Element<'_, Message> {
         grip(app),
         source,
         microphone(app),
+        space::horizontal(),
         record,
         control(
             app,
@@ -157,6 +158,7 @@ fn active(app: &App) -> Element<'_, Message> {
             "no-audio",
             Message::TogglePopover(Popover::Microphone)
         ),
+        space::horizontal(),
         pause,
         stop,
         control(app, Icon::Restart, "restart", Message::Restart),

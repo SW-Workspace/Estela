@@ -47,18 +47,18 @@ def run(wayland):
                 time.sleep(2)
                 frame = capture(env, artifacts / "initial.png")
                 initial = frame
-                click(frame, env, -300, 0)
+                click(frame, env, -385, 0)
                 time.sleep(0.8)
                 frame = capture(env, artifacts / "sources.png")
                 if wayland:
-                    click(frame, env, -135, 76)
+                    click(frame, env, -205, 76)
                     time.sleep(0.5)
                     frame = capture(env, artifacts / "windows.png")
                     click(frame, env, -200, 190)
                     time.sleep(1)
                     frame = capture(env, artifacts / "window-picker-failure.png")
                     assert frame == initial, "Canceled source selection moved the recorder"
-                click(frame, env, -165, 0)
+                click(frame, env, -246, 0)
                 time.sleep(0.8)
                 frame = capture(env, artifacts / "microphone.png")
                 click(frame, env, 22, 0)
@@ -96,9 +96,9 @@ def run(wayland):
 
 def check_wayland_drag_and_input(frame, env, artifacts, log, processes):
     x, y = frame
-    subprocess.run([tool("xdotool"), "mousemove", str(x - 382), str(y), "mousedown", "1"], env=env, check=True)
+    subprocess.run([tool("xdotool"), "mousemove", str(x - 493), str(y), "mousedown", "1"], env=env, check=True)
     time.sleep(0.1)
-    subprocess.run([tool("xdotool"), "mousemove", str(x - 262), str(y + 80)], env=env, check=True)
+    subprocess.run([tool("xdotool"), "mousemove", str(x - 373), str(y + 80)], env=env, check=True)
     time.sleep(0.2)
     subprocess.run([tool("xdotool"), "mouseup", "1"], env=env, check=True)
     time.sleep(0.5)
