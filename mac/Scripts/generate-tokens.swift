@@ -19,7 +19,7 @@ enum GenerationError: Error, CustomStringConvertible {
 }
 
 let gridUnit = 4
-let scriptDirectory = URL(filePath: CommandLine.arguments[0]).deletingLastPathComponent()
+let scriptDirectory = URL(filePath: CommandLine.arguments[0]).absoluteURL.deletingLastPathComponent()
 let repositoryRoot = scriptDirectory.appending(path: "../..").standardized
 let tokensFile = repositoryRoot.appending(path: "assets/design-tokens.json")
 let outputFile = repositoryRoot.appending(
