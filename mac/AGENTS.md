@@ -9,7 +9,7 @@ on the Rust workspace in `wl/`. Never edit `wl/` during a Mac task.
 | Path | Status for Mac tasks |
 | --- | --- |
 | `mac/` | Main work area. |
-| `assets/` | Shared design tokens and fonts. Editable when the task needs it. |
+| `assets/` | Shared design tokens. Editable when the task needs it. |
 | `.github/workflows/mac-*.yml` | Mac CI. Editable. |
 | `wl/`, other workflows | **Off limits.** |
 
@@ -60,7 +60,7 @@ is unavoidable, it is a single line explaining **why**, never what.
 - User-facing text lives only in `Estela/Localizable.xcstrings`: English base, Spanish translation.
 - Colors, spacing, radii and type come from `EstelaDesignSystem` tokens, never literals.
 - Tokens are generated from `assets/design-tokens.json` with `Scripts/generate-tokens.swift`; commit the output.
-- Dark theme first. Inter is bundled. 4 px grid.
+- Dark theme first. 4 px grid. Inter lives in `EstelaDesignSystem/Resources/Fonts`.
 
 ## 7. Tests
 
