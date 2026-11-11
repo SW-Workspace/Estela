@@ -13,6 +13,14 @@ pub mod state;
 pub enum Error {
     #[error("Operation not implemented")]
     NotImplemented,
+    #[error("Recording failed: {0}")]
+    Recording(String),
+    #[error(transparent)]
+    Capture(#[from] estela_capture::Error),
+    #[error(transparent)]
+    Format(#[from] estela_format::Error),
+    #[error(transparent)]
+    Media(#[from] estela_media_ffmpeg::Error),
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
