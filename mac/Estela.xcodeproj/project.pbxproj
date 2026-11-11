@@ -1,0 +1,371 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E5A000000000000000000101 /* EstelaDesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = E5A000000000000000000201 /* EstelaDesignSystem */; };
+		E5A000000000000000000102 /* EstelaPresentation in Frameworks */ = {isa = PBXBuildFile; productRef = E5A000000000000000000202 /* EstelaPresentation */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E5A000000000000000000301 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5A000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E5A000000000000000000401;
+			remoteInfo = Estela;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		E5A000000000000000000501 /* Estela.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Estela.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E5A000000000000000000502 /* EstelaUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EstelaUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		E5A000000000000000000601 /* Estela */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Estela;
+			sourceTree = "<group>";
+		};
+		E5A000000000000000000602 /* EstelaUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = EstelaUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E5A000000000000000000701 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E5A000000000000000000101 /* EstelaDesignSystem in Frameworks */,
+				E5A000000000000000000102 /* EstelaPresentation in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E5A000000000000000000702 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E5A000000000000000000801 = {
+			isa = PBXGroup;
+			children = (
+				E5A000000000000000000601 /* Estela */,
+				E5A000000000000000000602 /* EstelaUITests */,
+				E5A000000000000000000802 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E5A000000000000000000802 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E5A000000000000000000501 /* Estela.app */,
+				E5A000000000000000000502 /* EstelaUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E5A000000000000000000401 /* Estela */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E5A000000000000000000B02 /* Build configuration list for PBXNativeTarget "Estela" */;
+			buildPhases = (
+				E5A000000000000000000901 /* Sources */,
+				E5A000000000000000000701 /* Frameworks */,
+				E5A000000000000000000A01 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E5A000000000000000000601 /* Estela */,
+			);
+			name = Estela;
+			packageProductDependencies = (
+				E5A000000000000000000201 /* EstelaDesignSystem */,
+				E5A000000000000000000202 /* EstelaPresentation */,
+			);
+			productName = Estela;
+			productReference = E5A000000000000000000501 /* Estela.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E5A000000000000000000402 /* EstelaUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E5A000000000000000000B03 /* Build configuration list for PBXNativeTarget "EstelaUITests" */;
+			buildPhases = (
+				E5A000000000000000000902 /* Sources */,
+				E5A000000000000000000702 /* Frameworks */,
+				E5A000000000000000000A02 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E5A000000000000000000D01 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				E5A000000000000000000602 /* EstelaUITests */,
+			);
+			name = EstelaUITests;
+			productName = EstelaUITests;
+			productReference = E5A000000000000000000502 /* EstelaUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E5A000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					E5A000000000000000000401 = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					E5A000000000000000000402 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = E5A000000000000000000401;
+					};
+				};
+			};
+			buildConfigurationList = E5A000000000000000000B01 /* Build configuration list for PBXProject "Estela" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				es,
+				Base,
+			);
+			mainGroup = E5A000000000000000000801;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E5A000000000000000000E01 /* XCLocalSwiftPackageReference "Packages/EstelaKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E5A000000000000000000802 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E5A000000000000000000401 /* Estela */,
+				E5A000000000000000000402 /* EstelaUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E5A000000000000000000A01 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E5A000000000000000000A02 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E5A000000000000000000901 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E5A000000000000000000902 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E5A000000000000000000D01 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E5A000000000000000000401 /* Estela */;
+			targetProxy = E5A000000000000000000301 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		E5A000000000000000000C01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		E5A000000000000000000C02 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		E5A000000000000000000C03 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Estela;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.estela.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		E5A000000000000000000C04 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Estela;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.video";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.estela.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		E5A000000000000000000C05 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.estela.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = Estela;
+			};
+			name = Debug;
+		};
+		E5A000000000000000000C06 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.estela.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = Estela;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E5A000000000000000000B01 /* Build configuration list for PBXProject "Estela" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E5A000000000000000000C01 /* Debug */,
+				E5A000000000000000000C02 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E5A000000000000000000B02 /* Build configuration list for PBXNativeTarget "Estela" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E5A000000000000000000C03 /* Debug */,
+				E5A000000000000000000C04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E5A000000000000000000B03 /* Build configuration list for PBXNativeTarget "EstelaUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E5A000000000000000000C05 /* Debug */,
+				E5A000000000000000000C06 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		E5A000000000000000000E01 /* XCLocalSwiftPackageReference "Packages/EstelaKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/EstelaKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E5A000000000000000000201 /* EstelaDesignSystem */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = EstelaDesignSystem;
+		};
+		E5A000000000000000000202 /* EstelaPresentation */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = EstelaPresentation;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E5A000000000000000000001 /* Project object */;
+}

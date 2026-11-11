@@ -1,0 +1,32 @@
+{
+  "color": {
+    "accent": "#7C5CFF",
+    "background": "#0E0F12",
+    "border": "#2A2E36",
+    "surface": "#17191E",
+    "surfaceRaised": "#1F2228",
+    "textPrimary": "#F2F3F5",
+    "textSecondary": "#A1A6B0"
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 16,
+    "lg": 24,
+    "xl": 32
+  },
+  "radius": {
+    "sm": 4,
+    "md": 8,
+    "lg": 12
+  },
+  "fontSize": {
+    "caption": 11,
+    "body": 13,
+    "title": 20,
+    "display": 28
+  },
+  "fontFamily": {
+    "primary": "Inter Variable"
+  }
+}
