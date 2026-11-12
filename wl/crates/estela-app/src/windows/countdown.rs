@@ -10,29 +10,35 @@ use iced::{
 
 use crate::{app::App, message::Message, theme::tokens};
 
+const COUNTER_RADIUS: f32 = 82.0;
+const NUMBER_SIZE: f32 = 96.0;
+
 pub(crate) fn view(app: &App) -> Element<'_, Message> {
-    let ring = canvas::Canvas::new(Ring {
+    let counter = canvas::Canvas::new(Counter {
         fraction: app.countdown_fraction(),
+        number: app.countdown,
     })
-    .width(180)
-    .height(180);
-    let number = container(text(app.countdown.to_string()).size(96)).center(180);
-    let counter = stack![ring, number];
+    .width(Length::Fill)
+    .height(Length::Fill);
     container(
-        column![
-            space::vertical(),
-            text(app.strings.get("countdown"))
-                .size(14)
-                .color(tokens::TEXT.scale_alpha(0.8)),
+        stack![
             counter,
-            space::vertical(),
-            button(text(app.strings.get("escape")).size(12))
-                .on_press(Message::Cancel)
-                .padding([10, 16])
-                .style(crate::theme::chip),
+            column![
+                text(app.strings.get("countdown"))
+                    .size(14)
+                    .color(tokens::TEXT.scale_alpha(0.8)),
+                space::vertical(),
+                button(text(app.strings.get("escape")).size(12))
+                    .on_press(Message::Cancel)
+                    .padding([10, 16])
+                    .style(crate::theme::chip),
+            ]
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .align_x(Alignment::Center),
         ]
-        .spacing(12)
-        .align_x(Alignment::Center),
+        .width(Length::Fill)
+        .height(Length::Fill),
     )
     .padding(24)
     .width(Length::Fill)
@@ -53,11 +59,12 @@ pub(crate) fn view(app: &App) -> Element<'_, Message> {
     .into()
 }
 
-struct Ring {
+struct Counter {
     fraction: f32,
+    number: u64,
 }
 
-impl<Message> canvas::Program<Message> for Ring {
+impl<Message> canvas::Program<Message> for Counter {
     type State = ();
 
     fn draw(
@@ -70,7 +77,7 @@ impl<Message> canvas::Program<Message> for Ring {
     ) -> Vec<canvas::Geometry> {
         let mut frame = Frame::new(renderer, bounds.size());
         let center = frame.center();
-        let radius = 82.0;
+        let radius = COUNTER_RADIUS;
         let circle = Path::circle(center, radius);
         frame.fill(&circle, tokens::BASE.scale_alpha(0.68));
         frame.stroke(
@@ -102,6 +109,16 @@ impl<Message> canvas::Program<Message> for Ring {
             ),
             tokens::TEXT,
         );
+        frame.fill_text(canvas::Text {
+            content: self.number.to_string(),
+            position: center,
+            color: tokens::TEXT,
+            size: NUMBER_SIZE.into(),
+            font: iced::Font::with_name("Inter Variable"),
+            align_x: iced::alignment::Horizontal::Center.into(),
+            align_y: iced::alignment::Vertical::Center,
+            ..Default::default()
+        });
         vec![frame.into_geometry()]
     }
 }

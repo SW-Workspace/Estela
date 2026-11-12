@@ -54,6 +54,19 @@ The interface supports English and Spanish using the existing locale precedence.
 The recorder remembers its position, countdown preference and frame rate.
 Inter is bundled with its OFL license.
 
+## Recording location
+
+Recordings use the system video directory with an `Estela` subfolder, created
+when recording starts. Windows resolves the Videos known folder, including
+relocated folders. Linux resolves `XDG_VIDEOS_DIR`, including localized paths
+such as `~/Videos` or `~/Vídeos`. The interface language does not rename the
+system folder. If no video directory is configured, Estela uses `~/Videos/Estela`,
+then the temporary directory's `Estela` subfolder if no home directory is available.
+
+This default is centralized in `recording_directory` in
+`crates/estela-app/src/app/flow.rs` so it can change later. Recordings keep the
+`.estela` extension.
+
 ## Desktop differences
 
 | Capability | Windows | Linux X11 | Linux Wayland |

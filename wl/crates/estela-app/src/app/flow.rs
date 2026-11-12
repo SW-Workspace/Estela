@@ -27,11 +27,7 @@ impl App {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_nanos();
-        let directory = dirs::video_dir()
-            .or_else(dirs::home_dir)
-            .unwrap_or_else(std::env::temp_dir)
-            .join("Estela");
-        let path = directory.join(format!(
+        let path = recording_directory().join(format!(
             "{}-{timestamp}.estela",
             self.strings.get("recording")
         ));
@@ -234,4 +230,11 @@ impl App {
         }
         Task::batch(tasks)
     }
+}
+
+fn recording_directory() -> PathBuf {
+    dirs::video_dir()
+        .or_else(|| dirs::home_dir().map(|home| home.join("Videos")))
+        .unwrap_or_else(std::env::temp_dir)
+        .join("Estela")
 }
