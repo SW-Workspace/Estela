@@ -11,6 +11,8 @@ pub mod link;
 pub enum Error {
     #[error("Operation not implemented")]
     NotImplemented,
+    #[error("Media backend failed: {0}")]
+    Backend(String),
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }

@@ -9,3 +9,9 @@ publish.workspace = true
 estela-engine.workspace = true
 estela-library.workspace = true
 thiserror.workspace = true
+
+iced.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rfd = "=0.18.0"
+dirs = "=6.0.0"
