@@ -7,9 +7,11 @@ use std::{
 
 use estela_capture::session::{Frame, Pointer, Session, Source};
 use estela_format::tracks::{Recording, ZoomTrigger};
-use estela_media_ffmpeg::encode::Encoder;
+use estela_media::recording::{RecordingConfig, RecordingEncoder, RecordingFrame};
 
 use crate::{Error, Result};
+
+mod encoder;
 
 const FRAME_TIMEOUT: Duration = Duration::from_millis(8);
 const SOURCE_TIMEOUT: Duration = Duration::from_secs(15);
@@ -93,7 +95,6 @@ fn record(
     if ![30, 60].contains(&fps) {
         return Err(Error::Recording("Unsupported frame rate".into()));
     }
-    estela_media_ffmpeg::encode::available()?;
     let session = crate::platform::prepare(&source, fps)?;
     record_session(session, path, fps, commands, sender)
 }
@@ -105,7 +106,18 @@ fn record_session(
     commands: Receiver<Command>,
     sender: &Sender<Event>,
 ) -> Result<()> {
-    first_frame(session.as_mut())?;
+    let mut pending = commands.try_recv().ok();
+    if matches!(pending, Some(Command::Stop | Command::Discard)) {
+        let _ = sender.send(Event::Discarded);
+        return Ok(());
+    }
+    let frame = first_frame(session.as_mut())?;
+    let config = RecordingConfig {
+        width: frame.width,
+        height: frame.height,
+        fps,
+    };
+    let prepared_encoder = encoder::prepare(config)?;
     let embedded = session.cursor_embedded();
     let trigger = if embedded {
         ZoomTrigger::Unavailable
@@ -121,7 +133,11 @@ fn record_session(
         })
         .map_err(|error| Error::Recording(error.to_string()))?;
     loop {
-        match commands.recv_timeout(FRAME_TIMEOUT) {
+        match pending
+            .take()
+            .map(Ok)
+            .unwrap_or_else(|| commands.recv_timeout(FRAME_TIMEOUT))
+        {
             Ok(Command::Start) => break,
             Ok(Command::Stop | Command::Discard) | Err(mpsc::RecvTimeoutError::Disconnected) => {
                 let _ = sender.send(Event::Discarded);
@@ -134,16 +150,21 @@ fn record_session(
     }
     let first = first_frame(session.as_mut())?;
     let size = (first.width, first.height);
+    if size != (config.width, config.height) {
+        return Err(Error::Recording(
+            "Source dimensions changed during preparation".into(),
+        ));
+    }
     std::fs::create_dir_all(
         path.parent()
             .ok_or_else(|| Error::Recording("Missing destination directory".into()))?,
     )?;
     let partial = path.with_extension("partial.estela");
-    let mut encoder = Encoder::start(&partial, size, fps)?;
+    let mut encoder = prepared_encoder.start(&partial)?;
     let mut timeline = Timeline::new(first, fps, embedded, trigger);
     let result = capture_loop(
         session.as_mut(),
-        &mut encoder,
+        encoder.as_mut(),
         &mut timeline,
         &commands,
         sender,
@@ -151,7 +172,9 @@ fn record_session(
     drop(session);
     let _ = sender.send(Event::Finalizing);
     let discard = result?;
-    encoder.finish()?;
+    encoder
+        .finish()
+        .map_err(|error| Error::Recording(error.to_string()))?;
     if discard || timeline.frames == 0 {
         std::fs::remove_file(&partial)?;
         let _ = sender.send(Event::Discarded);
@@ -204,7 +227,7 @@ fn first_frame(session: &mut dyn Session) -> Result<Frame> {
 
 fn capture_loop(
     session: &mut dyn Session,
-    encoder: &mut Encoder,
+    encoder: &mut dyn RecordingEncoder,
     timeline: &mut Timeline,
     commands: &Receiver<Command>,
     sender: &Sender<Event>,
@@ -248,7 +271,12 @@ fn capture_loop(
             ((now - next_frame).as_nanos() / interval.as_nanos() + 1).min(u128::from(timeline.fps));
         for _ in 0..due {
             timeline.pointer(pointer);
-            encoder.write(&timeline.frame.rgba)?;
+            encoder
+                .write(RecordingFrame {
+                    rgba: &timeline.frame.rgba,
+                    pts: recorded_time(timeline.frames, timeline.fps),
+                })
+                .map_err(|error| Error::Recording(error.to_string()))?;
             timeline.frames += 1;
             next_frame += interval;
             if timeline.frames.is_multiple_of(u64::from(timeline.fps) / 4) {

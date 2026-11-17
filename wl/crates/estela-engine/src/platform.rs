@@ -13,3 +13,9 @@ pub use estela_platform_linux::window::{
 pub use estela_platform_win::window::{
     configure as configure_window, presentation_backend, release as release_window,
 };
+
+#[cfg(target_os = "linux")]
+pub use estela_platform_linux::encoding::recording_backends;
+
+#[cfg(windows)]
+pub use estela_platform_win::encoding::recording_backends;

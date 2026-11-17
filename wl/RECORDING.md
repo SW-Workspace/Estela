@@ -2,7 +2,7 @@
 
 This milestone records a screen or window, saves one local `.estela` file and
 plays it inside Estela with automatic zoom. Manual editing, export, microphone
-capture, hardware encoding and the database library are outside this milestone.
+capture and the database library are outside this milestone.
 The original media remains unchanged when automatic zoom is toggled in preview.
 
 ## Run
@@ -107,6 +107,33 @@ explicitly identified alternative, not a fabricated click log. If the compositor
 only supplies an embedded cursor, automatic zoom is unavailable and the interface
 explains that limitation. X11 window capture uses a Composite pixmap so overlapping
 controls are not included in the selected window's image.
+
+## Encoding backends
+
+The recording engine uses the shared `RecordingEncoder` contract. The platform
+adapter supplies the candidate order; the engine retains timing, pause/resume,
+cursor events and project finalization.
+
+Linux tries NVENC when an NVIDIA device is present, then VA-API for the discovered
+DRM render nodes, followed by FFmpeg's LGPL MPEG-4 software encoder. Device
+presence is only a candidate hint: each candidate must encode and decode frames
+at the actual source dimensions and frame rate before it can be selected.
+Windows currently retains the same software encoder through the new contract.
+The native Media Foundation implementation is the next integration step.
+
+Capability probes run during preparation, before the recorder reports readiness
+and before the countdown. Each probe subprocess has a ten-second timeout. Probes
+use temporary files and do not create the recording destination. A failed
+hardware probe falls through to the next candidate. The selected backend and
+rejection reasons are written to the application log.
+
+All current paths accept CPU RGBA frames and produce fragmented MP4 media. They
+validate frame size and timestamps against the configured frame rate. There is
+no mid-recording encoder switch: a failure preserves the partial recording and
+reports an error. GPU texture and DMA-BUF transport remain a later optimization.
+Preview continues to use FFmpeg independently of the recording encoder choice.
+
+See [platform encoding](PLATFORM-ENCODING.md) for the implementation boundaries.
 
 ## Persistence and failures
 

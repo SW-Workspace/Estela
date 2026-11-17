@@ -4,6 +4,7 @@ pub mod caps;
 pub mod capture;
 pub mod clock;
 pub mod cursor;
+pub mod encoding;
 pub mod input;
 pub mod interop;
 mod portal_runtime;
