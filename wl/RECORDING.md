@@ -14,10 +14,14 @@ cargo run -p estela-app
 cargo run -p estela-app -- /path/to/recording.estela
 ```
 
-Install a dynamically linked **LGPL** FFmpeg build on `PATH`, or set
-`ESTELA_FFMPEG` to its executable path. The initial recording encoder uses
+Estela searches for FFmpeg in this order: `ESTELA_FFMPEG`, beside the Estela
+executable, in its `ffmpeg/` subdirectory, then on `PATH`. Bundle `ffmpeg.exe`
+and its matching DLLs on Windows, or `ffmpeg` and its runtime libraries on Linux.
+Paths beside Estela are resolved from its executable, not the working directory.
+An explicit `ESTELA_FFMPEG` override is authoritative, including when invalid.
+Use a dynamically linked **LGPL** build. The initial recording encoder uses
 FFmpeg's native MPEG-4 encoder rather than a GPL encoder. FFmpeg is a runtime
-requirement and is not downloaded or bundled by the application.
+requirement and is not downloaded by the application.
 
 Linux also requires PipeWire development headers, libclang, a C compiler,
 pkg-config, a working graphics driver and xdg-desktop-portal with the desktop's
@@ -35,6 +39,20 @@ sudo apt install libpipewire-0.3-dev libclang-dev pkg-config build-essential \
 Windows requires the Windows SDK and the MSVC Rust toolchain for the normal
 native build. Capture uses Windows Graphics Capture on Windows 10 2004 or newer.
 The workspace can also be checked for the Windows GNU target from Linux.
+
+Windows builds use the GUI subsystem, including development builds. Launch
+`estela-app.exe` directly from Explorer without keeping CMD open. To build a
+portable folder containing the required FFmpeg executable, run from `wl/`:
+
+```powershell
+./ci/package-windows.ps1 -FfmpegDirectory C:/Dependencies/ffmpeg/bin
+```
+
+The supplied directory must include a runnable dynamically linked LGPL build,
+its DLLs and legal notices. The script validates the runtime and MPEG-4 encoder
+and copies the whole directory to `target/windows-portable/ffmpeg/` alongside
+`target/windows-portable/estela-app.exe`. Distribute the complete portable folder.
+Verify its licenses and source information before distributing it.
 
 ## Flow
 

@@ -14,11 +14,15 @@ pub struct Encoder {
 }
 
 pub fn executable() -> std::ffi::OsString {
-    std::env::var_os("ESTELA_FFMPEG").unwrap_or_else(|| "ffmpeg".into())
+    crate::runtime::executable()
 }
 
 pub fn available() -> Result<()> {
-    let output = Command::new(executable()).args(["-version"]).output()?;
+    let mut command = Command::new(executable());
+    let output = command
+        .args(["-version"])
+        .output()
+        .map_err(|error| crate::runtime::launch_error(&command, error))?;
     if !output.status.success() {
         return Err(Error::Backend("FFmpeg is unavailable".into()));
     }
@@ -28,7 +32,8 @@ pub fn available() -> Result<()> {
 impl Encoder {
     pub fn start(path: &Path, size: (u32, u32), fps: u32) -> Result<Self> {
         let log = path.with_extension("log");
-        let mut child = Command::new(executable())
+        let mut command = Command::new(executable());
+        command
             .args([
                 "-hide_banner",
                 "-loglevel",
@@ -68,8 +73,8 @@ impl Encoder {
             .arg(path)
             .stdin(Stdio::piped())
             .stdout(Stdio::null())
-            .stderr(Stdio::from(File::create(&log)?))
-            .spawn()?;
+            .stderr(Stdio::from(File::create(&log)?));
+        let mut child = crate::runtime::spawn(&mut command)?;
         let input = child.stdin.take();
         Ok(Self { child, input, log })
     }

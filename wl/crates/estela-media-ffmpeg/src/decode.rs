@@ -14,7 +14,8 @@ pub struct Decoder {
 
 impl Decoder {
     pub fn start(path: &Path, size: (u32, u32), seconds: f64) -> Result<Self> {
-        let mut child = Command::new(crate::encode::executable())
+        let mut command = Command::new(crate::encode::executable());
+        command
             .args([
                 "-hide_banner",
                 "-loglevel",
@@ -37,8 +38,8 @@ impl Decoder {
             ])
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
-            .stderr(Stdio::null())
-            .spawn()?;
+            .stderr(Stdio::null());
+        let mut child = crate::runtime::spawn(&mut command)?;
         let output = child
             .stdout
             .take()
