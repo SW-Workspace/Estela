@@ -28,11 +28,11 @@ slow capture.
 | Platform | Candidates | Input | Output |
 | --- | --- | --- | --- |
 | Linux | NVENC when an NVIDIA node is present, VA-API for sorted DRM render nodes, software MPEG-4 | CPU RGBA | Fragmented MP4 |
-| Windows | Software MPEG-4 | CPU RGBA | Fragmented MP4 |
+| Windows | Media Foundation H.264, software MPEG-4 | CPU RGBA converted to NV12 | Fragmented MP4 |
 
 Hardware candidates are capability hints rather than promises. FFmpeg encodes
 three synthetic frames with the real dimensions and frame rate, then decodes one
-frame and checks its size. Both subprocesses have bounded execution times and
+frame and checks its size. Both FFmpeg subprocesses have bounded execution times and
 write only into an owned temporary directory. No candidate can be chosen merely
 because FFmpeg lists it. Preparation completes only after a candidate passes.
 
@@ -42,15 +42,42 @@ project. Existing destinations are rejected before opening an encoder.
 
 ## Native Windows integration
 
-The next implementation supplies Media Foundation H.264 encoding from the
-Windows platform crate. It must preserve fragmented media, explicit frame times,
-clean finalization and cancellation. Hardware initialization must be verified
-before selecting it, with software fallback if initialization fails.
+Media Foundation H.264 encoding lives in the Windows platform crate, behind the
+same recording contract. Only the existing windows crate gains API features;
+there are no new packages or dependency graph edges. Each native API boundary
+has an explicit safety justification.
 
-The existing windows-capture encoder is not used as a shortcut: its public
-container builder does not expose the fragmented MP4 sink needed for the current
-partial recording guarantees. A direct Media Foundation adapter needs additional
-features of the existing windows crate and encapsulated native API calls.
+The adapter initializes COM and Media Foundation on the owning thread. A runtime
+guard cannot move between threads. Shutdown releases the sink writer before the
+media sink, closes the byte stream, and finally balances MF and COM startup.
+Initialization failures remove only a destination created by that attempt.
+Existing files use the fail-if-exists native mode and are never removed.
+
+A fragmented MP4 sink is created explicitly with `MFCreateFMPEG4MediaSink`, so
+output does not depend on the `.partial.estela` extension. NV12 conversion uses
+limited-range BT.709, pads odd source dimensions to even coded dimensions, and
+checks sample size. Frame times and durations derive from the shared nanosecond
+clock and are converted to 100-nanosecond MF ticks without cumulative drift.
+H.264 requests a one-second GOP and no B-frame delay.
+
+`MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS` permits hardware MFT selection. It does
+not prove that the selected transform is hardware: Media Foundation can choose
+its native software encoder. A failed native capability probe selects the shared
+FFmpeg software fallback. A failure to open the real native destination retries
+remaining candidates only if no destination remains from the failed attempt.
+
+The native capability probe creates and finalizes three actual frames, then
+checks the resulting MP4 boxes for movie metadata, fragments and media data.
+It runs on a separate COM thread with a ten-second response deadline. A timed-out
+thread is detached because Rust cannot terminate a driver call safely; it owns
+its resources and cleans them up if the call eventually returns. This deadline
+does not bound native driver calls during an active recording.
+
+Reference API contracts:
+
+- [Fragmented MP4 sink](https://learn.microsoft.com/en-us/windows/win32/api/mfidl/nf-mfidl-mfcreatefmpeg4mediasink).
+- [Sink writer ownership](https://learn.microsoft.com/en-us/windows/win32/api/mfreadwrite/nf-mfreadwrite-mfcreatesinkwriterfrommediasink).
+- [Hardware transform selection](https://learn.microsoft.com/en-us/windows/win32/medfound/mf-readwrite-enable-hardware-transforms).
 
 ## GPU transport
 
@@ -74,3 +101,14 @@ cargo test -p estela-media-ffmpeg --test runtime -- --ignored
 A hardware throughput claim additionally requires recording and reopening output
 on actual Intel, AMD and NVIDIA devices. Native Windows API behavior must be
 verified on Windows; cross-compilation alone cannot establish it.
+
+On Windows, run the explicit native round trip with a shared LGPL FFmpeg decoder:
+
+```powershell
+./ci/check-windows-encoding.ps1 -FfmpegDirectory C:/Dependencies/ffmpeg/bin
+```
+
+This verifies H.264 fragmented output, 30/60 fps, exact decoded frame counts,
+RGBA channel order, odd dimensions, invalid samples and destination protection.
+The test is explicit because it requires native Media Foundation and the decoder;
+it cannot be executed by a Linux cross-compilation check.

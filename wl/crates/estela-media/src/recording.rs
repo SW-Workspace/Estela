@@ -1,8 +1,10 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use estela_model::Time;
 
 use crate::{Error, Result};
+
+pub mod nv12;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RecordingBackend {
@@ -49,4 +51,10 @@ pub trait RecordingEncoder {
     fn backend(&self) -> &RecordingBackend;
     fn write(&mut self, frame: RecordingFrame<'_>) -> Result<()>;
     fn finish(self: Box<Self>) -> Result<()>;
+}
+
+#[derive(Clone, Copy)]
+pub struct RecordingEncoderFactory {
+    pub probe: fn(RecordingConfig) -> Result<()>,
+    pub start: fn(&Path, RecordingConfig) -> Result<Box<dyn RecordingEncoder>>,
 }

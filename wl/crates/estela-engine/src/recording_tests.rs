@@ -119,3 +119,30 @@ fn slow_capture_preserves_wall_clock_duration() {
     worker.join().unwrap();
     std::fs::remove_file(path).unwrap();
 }
+
+#[test]
+#[ignore = "Requires an available platform recording encoder."]
+fn stopping_before_the_first_encoded_frame_discards_the_empty_take() {
+    let unique = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let path = std::env::temp_dir().join(format!(
+        "estela-empty-{}-{unique}.estela",
+        std::process::id()
+    ));
+    let output = path.clone();
+    let (commands, receiver) = mpsc::channel();
+    let (sender, events) = mpsc::channel();
+    let worker = std::thread::spawn(move || {
+        record_session(Box::new(TestSource), output, 30, receiver, &sender).unwrap();
+    });
+    wait_for(&events, |event| matches!(event, Event::Prepared { .. }));
+    commands.send(Command::Start).unwrap();
+    commands.send(Command::Stop).unwrap();
+    wait_for(&events, |event| matches!(event, Event::Discarded));
+    worker.join().unwrap();
+    assert!(!path.exists());
+    assert!(!path.with_extension("partial.estela").exists());
+    assert!(!path.with_extension("partial.log").exists());
+}

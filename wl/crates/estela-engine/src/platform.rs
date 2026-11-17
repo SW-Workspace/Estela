@@ -19,3 +19,13 @@ pub use estela_platform_linux::encoding::recording_backends;
 
 #[cfg(windows)]
 pub use estela_platform_win::encoding::recording_backends;
+
+#[cfg(windows)]
+pub use estela_platform_win::encoding::native_factory;
+
+#[cfg(target_os = "linux")]
+pub fn native_factory(
+    _backend: &estela_media::recording::RecordingBackend,
+) -> Option<estela_media::recording::RecordingEncoderFactory> {
+    None
+}

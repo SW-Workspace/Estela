@@ -116,22 +116,31 @@ cursor events and project finalization.
 
 Linux tries NVENC when an NVIDIA device is present, then VA-API for the discovered
 DRM render nodes, followed by FFmpeg's LGPL MPEG-4 software encoder. Device
-presence is only a candidate hint: each candidate must encode and decode frames
+presence is only a candidate hint: each FFmpeg candidate must encode and decode frames
 at the actual source dimensions and frame rate before it can be selected.
-Windows currently retains the same software encoder through the new contract.
-The native Media Foundation implementation is the next integration step.
+Windows first tries native Media Foundation H.264 with hardware transforms
+enabled, then falls back to FFmpeg's software MPEG-4 encoder if native
+initialization fails. Media Foundation may select a native software transform
+when the machine does not provide a usable hardware transform.
 
 Capability probes run during preparation, before the recorder reports readiness
-and before the countdown. Each probe subprocess has a ten-second timeout. Probes
+and before the countdown. Each FFmpeg probe subprocess has a ten-second timeout. The native Windows probe
+runs on a dedicated COM thread with a ten-second response deadline and verifies
+that finalization produced nonempty fragmented media. A stalled native thread
+cannot be forcibly terminated and may remain until the driver returns. Probes
 use temporary files and do not create the recording destination. A failed
 hardware probe falls through to the next candidate. The selected backend and
-rejection reasons are written to the application log.
+rejection reasons are written to standard error.
 
-All current paths accept CPU RGBA frames and produce fragmented MP4 media. They
+All current paths accept CPU RGBA frames and produce fragmented MP4 media.
+Windows converts RGBA to padded NV12 using limited-range BT.709 color and uses
+Media Foundation timestamps in 100-nanosecond units at the API boundary. They
 validate frame size and timestamps against the configured frame rate. There is
 no mid-recording encoder switch: a failure preserves the partial recording and
 reports an error. GPU texture and DMA-BUF transport remain a later optimization.
 Preview continues to use FFmpeg independently of the recording encoder choice.
+Windows native recording itself can prepare without FFmpeg, but the complete
+record-and-preview workflow still needs the bundled runtime.
 
 See [platform encoding](PLATFORM-ENCODING.md) for the implementation boundaries.
 

@@ -172,14 +172,17 @@ fn record_session(
     drop(session);
     let _ = sender.send(Event::Finalizing);
     let discard = result?;
-    encoder
-        .finish()
-        .map_err(|error| Error::Recording(error.to_string()))?;
+    let finished = encoder.finish();
     if discard || timeline.frames == 0 {
-        std::fs::remove_file(&partial)?;
+        if let Err(error) = std::fs::remove_file(&partial) {
+            if error.kind() != std::io::ErrorKind::NotFound {
+                return Err(error.into());
+            }
+        }
         let _ = sender.send(Event::Discarded);
         return Ok(());
     }
+    finished.map_err(|error| Error::Recording(error.to_string()))?;
     let mut recording = timeline.recording(
         path.file_stem()
             .and_then(|stem| stem.to_str())

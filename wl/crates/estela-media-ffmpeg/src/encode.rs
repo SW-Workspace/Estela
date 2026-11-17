@@ -100,6 +100,9 @@ impl Encoder {
         self.input.take();
         if !self.child.wait()?.success() {
             let message = std::fs::read_to_string(&self.log).unwrap_or_default();
+            if self.frames == 0 {
+                let _ = std::fs::remove_file(&self.log);
+            }
             return Err(Error::Backend(format!(
                 "FFmpeg could not finish recording: {message}"
             )));

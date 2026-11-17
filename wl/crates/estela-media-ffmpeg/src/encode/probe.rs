@@ -4,7 +4,7 @@ use std::{
     path::PathBuf,
     process::{Command, Stdio},
     sync::atomic::{AtomicU64, Ordering},
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
 use estela_media::recording::{RecordingBackend, RecordingConfig};
@@ -90,8 +90,12 @@ struct ProbeDirectory(PathBuf);
 impl ProbeDirectory {
     fn new() -> Result<Self> {
         let sequence = PROBE_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|error| Error::Backend(error.to_string()))?
+            .as_nanos();
         let path = std::env::temp_dir().join(format!(
-            "estela-encoder-probe-{}-{sequence}",
+            "estela-encoder-probe-{}-{unique}-{sequence}",
             std::process::id(),
         ));
         std::fs::create_dir(&path)?;
