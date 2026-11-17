@@ -112,3 +112,20 @@ This verifies H.264 fragmented output, 30/60 fps, exact decoded frame counts,
 RGBA channel order, odd dimensions, invalid samples and destination protection.
 The test is explicit because it requires native Media Foundation and the decoder;
 it cannot be executed by a Linux cross-compilation check.
+
+## CPU conversion benchmark
+
+The NV12 converter processes luma in contiguous rows and chroma in paired rows,
+so the compiler can optimize the dense pixel path without unsafe code. The odd
+row and column cases retain explicit black padding and correct chroma averaging.
+A regression test checks the resulting planes at an odd-sized colored boundary.
+
+Run the same synthetic conversion workload on either operating system:
+
+```sh
+cargo run --release -p estela-media --example recording_conversion
+```
+
+The example reports milliseconds per frame and conversion throughput at 720p and
+1080p. It excludes capture, synchronization, encoding and file I/O; its throughput
+is not a claim about end-to-end recording FPS or native hardware acceleration.

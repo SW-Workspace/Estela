@@ -57,47 +57,75 @@ impl Nv12Buffer {
         }
         let width = self.width as usize;
         let luma_length = width * self.height as usize;
-        self.bytes[..luma_length].fill(LUMA_BLACK);
-        self.bytes[luma_length..].fill(CHROMA_NEUTRAL);
-        for y in (0..self.height as usize).step_by(2) {
-            for x in (0..width).step_by(2) {
-                self.convert_block(rgba, x, y, luma_length);
-            }
-        }
+        let (luma, chroma) = self.bytes.split_at_mut(luma_length);
+        luma.fill(LUMA_BLACK);
+        let source_stride = self.source.width as usize * RGBA_CHANNELS;
+        convert_luma(rgba, luma, source_stride, width);
+        convert_chroma(rgba, chroma, source_stride, width);
         Ok(&self.bytes)
-    }
-
-    fn convert_block(&mut self, rgba: &[u8], x: usize, y: usize, luma_length: usize) {
-        let mut sum = [0; 3];
-        for vertical in 0..2 {
-            for horizontal in 0..2 {
-                let pixel = self.pixel(rgba, x + horizontal, y + vertical);
-                for channel in 0..3 {
-                    sum[channel] += pixel[channel];
-                }
-                let index = (y + vertical) * self.width as usize + x + horizontal;
-                self.bytes[index] = component(pixel, LUMA_WEIGHTS, LUMA_BLACK, LUMA_WHITE);
-            }
-        }
-        let average = sum.map(|channel| (channel + BLOCK_PIXELS / 2) / BLOCK_PIXELS);
-        let index = luma_length + (y / 2) * self.width as usize + x;
-        self.bytes[index] = component(average, BLUE_CHROMA_WEIGHTS, CHROMA_NEUTRAL, CHROMA_MAX);
-        self.bytes[index + 1] = component(average, RED_CHROMA_WEIGHTS, CHROMA_NEUTRAL, CHROMA_MAX);
-    }
-
-    fn pixel(&self, rgba: &[u8], x: usize, y: usize) -> [i32; 3] {
-        if x >= self.source.width as usize || y >= self.source.height as usize {
-            return [0; 3];
-        }
-        let index = (y * self.source.width as usize + x) * RGBA_CHANNELS;
-        [
-            i32::from(rgba[index]),
-            i32::from(rgba[index + 1]),
-            i32::from(rgba[index + 2]),
-        ]
     }
 }
 
+fn convert_luma(rgba: &[u8], luma: &mut [u8], source_stride: usize, destination_stride: usize) {
+    let rows = rgba
+        .chunks_exact(source_stride)
+        .zip(luma.chunks_exact_mut(destination_stride));
+    for (source, destination) in rows {
+        let pixels = source.as_chunks::<RGBA_CHANNELS>().0;
+        for (pixel, value) in pixels.iter().zip(destination.iter_mut()) {
+            let rgb = [
+                i32::from(pixel[0]),
+                i32::from(pixel[1]),
+                i32::from(pixel[2]),
+            ];
+            *value = component(rgb, LUMA_WEIGHTS, LUMA_BLACK, LUMA_WHITE);
+        }
+    }
+}
+
+fn convert_chroma(rgba: &[u8], chroma: &mut [u8], source_stride: usize, destination_stride: usize) {
+    const PAIR_BYTES: usize = RGBA_CHANNELS * 2;
+    let row_pair_bytes = source_stride.checked_mul(2).unwrap_or(rgba.len());
+    let rows = rgba
+        .chunks(row_pair_bytes)
+        .zip(chroma.chunks_exact_mut(destination_stride));
+    for (source, destination) in rows {
+        let (top, bottom) = source.split_at(source_stride);
+        let output = destination.as_chunks_mut::<2>().0;
+        for (index, (pixels, uv)) in top.chunks(PAIR_BYTES).zip(output.iter_mut()).enumerate() {
+            let start = index * PAIR_BYTES;
+            let end = (start + PAIR_BYTES).min(bottom.len());
+            let below = bottom.get(start..end).unwrap_or_default();
+            let first = pair_sum(pixels);
+            let second = pair_sum(below);
+            let average = std::array::from_fn(|channel| {
+                (first[channel] + second[channel] + BLOCK_PIXELS / 2) / BLOCK_PIXELS
+            });
+            uv[0] = component(average, BLUE_CHROMA_WEIGHTS, CHROMA_NEUTRAL, CHROMA_MAX);
+            uv[1] = component(average, RED_CHROMA_WEIGHTS, CHROMA_NEUTRAL, CHROMA_MAX);
+        }
+    }
+}
+
+#[inline]
+fn pair_sum(pixels: &[u8]) -> [i32; 3] {
+    let Some(first) = pixels.get(..RGBA_CHANNELS) else {
+        return [0; 3];
+    };
+    let mut sum = [
+        i32::from(first[0]),
+        i32::from(first[1]),
+        i32::from(first[2]),
+    ];
+    if let Some(second) = pixels.get(RGBA_CHANNELS..RGBA_CHANNELS * 2) {
+        sum[0] += i32::from(second[0]);
+        sum[1] += i32::from(second[1]);
+        sum[2] += i32::from(second[2]);
+    }
+    sum
+}
+
+#[inline]
 fn component(pixel: [i32; 3], weights: [i32; 3], offset: u8, maximum: i32) -> u8 {
     let sum = pixel[0] * weights[0] + pixel[1] * weights[1] + pixel[2] * weights[2];
     let value = ((sum + COLOR_ROUNDING) >> COLOR_SCALE_BITS) + i32::from(offset);
@@ -141,6 +169,24 @@ mod tests {
         );
         assert!(buffer.convert(&[0; 3]).is_err());
         assert_eq!(buffer.convert(&[0; 4]).unwrap(), [16, 16, 16, 16, 128, 128]);
+    }
+
+    #[test]
+    fn padded_rows_and_columns_preserve_chroma_block_alignment() {
+        let config = RecordingConfig {
+            width: 3,
+            height: 3,
+            fps: 30,
+        };
+        let mut buffer = Nv12Buffer::new(config).unwrap();
+        let rgba = [255, 0, 0, 255].repeat(9);
+        assert_eq!(
+            buffer.convert(&rgba).unwrap(),
+            [
+                63, 63, 63, 16, 63, 63, 63, 16, 63, 63, 63, 16, 16, 16, 16, 16, 102, 240, 115, 184,
+                115, 184, 122, 156,
+            ]
+        );
     }
 
     #[test]
