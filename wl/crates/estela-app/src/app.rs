@@ -16,7 +16,7 @@ use estela_engine::{
     recording::{self, Recorder},
 };
 
-use crate::{localization::Strings, message::Message};
+use crate::{localization::Strings, message::Message, windows::recording_bar};
 
 const BAR_SIZE: Size = Size::new(600.0, 440.0);
 const PREVIEW_SIZE: Size = Size::new(960.0, 600.0);
@@ -79,6 +79,7 @@ pub struct App {
     pub(crate) strings: Strings,
     pub(crate) state: State,
     pub(crate) popover: Option<Popover>,
+    pub(crate) hint: Option<&'static str>,
     pub(crate) preferences: Preferences,
     pub(crate) sources: Vec<Source>,
     pub(crate) selected: Option<Source>,
@@ -148,6 +149,7 @@ impl App {
             strings,
             state: State::Ready,
             popover: None,
+            hint: None,
             preferences,
             sources: Vec::new(),
             selected: None,
@@ -325,6 +327,14 @@ impl App {
                 width: width as u32,
                 height: height as u32,
                 radius: 14,
+            });
+        } else if self.hint.is_some() {
+            areas.push(api::InputArea {
+                x: (600 - recording_bar::HINT_WIDTH as i32) / 2,
+                y: 84,
+                width: recording_bar::HINT_WIDTH,
+                height: recording_bar::HINT_HEIGHT,
+                radius: recording_bar::HINT_HEIGHT / 2,
             });
         }
         api::WindowInput::Areas(areas)

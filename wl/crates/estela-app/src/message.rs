@@ -15,6 +15,7 @@ pub enum Message {
     Refresh,
     TogglePopover(crate::app::Popover),
     DismissPopover,
+    Hint(Option<&'static str>),
     RetryShortcuts,
     Kind(SourceKind),
     Source(Source),

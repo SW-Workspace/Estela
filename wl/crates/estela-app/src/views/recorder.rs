@@ -41,6 +41,8 @@ fn controls(app: &App) -> Element<'_, Message> {
             .width(width as f32)
             .height(height as f32);
         content = content.push(container(panel).center_x(Length::Fill));
+    } else if let Some(key) = app.hint {
+        content = content.push(container(recording_bar::hint(app, key)).center_x(Length::Fill));
     }
     content.into()
 }

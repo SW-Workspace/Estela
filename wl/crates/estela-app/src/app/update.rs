@@ -52,6 +52,13 @@ impl App {
                 };
                 return self.configure_input();
             }
+            Message::Hint(hint) => {
+                if self.hint == hint {
+                    return Task::none();
+                }
+                self.hint = hint;
+                return self.configure_input();
+            }
             Message::DismissPopover => {
                 self.popover = None;
                 return self.configure_input();
