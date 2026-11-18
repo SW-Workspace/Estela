@@ -1,7 +1,7 @@
 use std::{
     io::Read,
     path::Path,
-    process::{Child, ChildStdout, Command, Stdio},
+    process::{Child, ChildStdout, Stdio},
 };
 
 use crate::{Error, Result};
@@ -14,7 +14,7 @@ pub struct Decoder {
 
 impl Decoder {
     pub fn start(path: &Path, size: (u32, u32), seconds: f64) -> Result<Self> {
-        let mut command = Command::new(crate::encode::executable());
+        let mut command = crate::runtime::command();
         command
             .args([
                 "-hide_banner",

@@ -2,7 +2,7 @@ use std::{
     fs::File,
     io::Write,
     path::{Path, PathBuf},
-    process::{Child, ChildStdin, Command, Stdio},
+    process::{Child, ChildStdin, Stdio},
 };
 
 use estela_media::recording::{
@@ -30,7 +30,7 @@ pub fn executable() -> std::ffi::OsString {
 }
 
 pub fn available() -> Result<()> {
-    let mut command = Command::new(executable());
+    let mut command = crate::runtime::command();
     let output = command
         .args(["-version"])
         .output()

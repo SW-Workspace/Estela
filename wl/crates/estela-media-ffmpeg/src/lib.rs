@@ -8,6 +8,8 @@ pub mod encode;
 pub mod link;
 mod runtime;
 
+pub use runtime::set_command_setup;
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Operation not implemented")]

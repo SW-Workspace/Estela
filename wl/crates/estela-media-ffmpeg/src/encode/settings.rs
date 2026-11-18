@@ -13,7 +13,7 @@ pub(super) fn command(
     config
         .frame_bytes()
         .map_err(|error| Error::Backend(error.to_string()))?;
-    let mut command = Command::new(super::executable());
+    let mut command = crate::runtime::command();
     command.args(["-hide_banner", "-loglevel", "error", "-nostdin", "-n"]);
     if let RecordingBackend::Vaapi { device } = backend {
         command.arg("-vaapi_device").arg(device);

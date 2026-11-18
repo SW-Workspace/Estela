@@ -34,7 +34,7 @@ pub fn probe(config: RecordingConfig, backend: &RecordingBackend) -> Result<()> 
     drop(file);
     let mut command = super::settings::command(&output, config, backend, input.as_os_str())?;
     run(&mut command, &directory)?;
-    let mut decode = Command::new(super::executable());
+    let mut decode = crate::runtime::command();
     let decoded = directory.0.join("decoded.rgba");
     decode
         .args(["-hide_banner", "-loglevel", "error", "-nostdin", "-i"])

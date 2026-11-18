@@ -29,3 +29,8 @@ pub fn native_factory(
 ) -> Option<estela_media::recording::RecordingEncoderFactory> {
     None
 }
+
+pub(crate) fn setup_graphical_subprocesses() {
+    #[cfg(windows)]
+    estela_media_ffmpeg::set_command_setup(estela_platform_win::window::hide_console);
+}

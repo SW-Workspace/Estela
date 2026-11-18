@@ -2,9 +2,24 @@ use std::{
     ffi::OsString,
     path::Path,
     process::{Child, Command},
+    sync::OnceLock,
 };
 
 use crate::{Error, Result};
+
+static COMMAND_SETUP: OnceLock<fn(&mut Command)> = OnceLock::new();
+
+pub fn set_command_setup(setup: fn(&mut Command)) {
+    let _ = COMMAND_SETUP.set(setup);
+}
+
+pub(crate) fn command() -> Command {
+    let mut command = Command::new(executable());
+    if let Some(setup) = COMMAND_SETUP.get() {
+        setup(&mut command);
+    }
+    command
+}
 
 pub fn executable() -> OsString {
     resolve(
