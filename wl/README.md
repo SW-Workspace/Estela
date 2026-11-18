@@ -9,4 +9,4 @@ Pending native integrations require dynamically linked LGPL FFmpeg, PostgreSQL
 and xdg portals development support. Windows needs the Windows SDK and MSVC.
 
 Packaging directories contain templates, not distributable installers.
-See [implementation status](reference/phase-1-status.md).
+See [recording setup and implementation status](RECORDING.md).

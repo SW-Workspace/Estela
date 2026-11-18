@@ -8,3 +8,5 @@ publish.workspace = true
 [dependencies]
 estela-model.workspace = true
 thiserror.workspace = true
+
+libm.workspace = true
