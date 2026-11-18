@@ -1,0 +1,29 @@
+name: macOS
+on:
+  push:
+    paths: ["mac/**", "assets/**", ".github/workflows/mac-ci.yml"]
+  pull_request:
+    paths: ["mac/**", "assets/**", ".github/workflows/mac-ci.yml"]
+jobs:
+  check:
+    runs-on: macos-latest
+    env:
+      SWIFTLINT_VERSION: 0.65.1
+    defaults:
+      run:
+        working-directory: mac
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SwiftLint
+        run: |
+          curl -sSL -o "$RUNNER_TEMP/swiftlint.zip" \
+            "https://github.com/realm/SwiftLint/releases/download/$SWIFTLINT_VERSION/portable_swiftlint.zip"
+          unzip -q "$RUNNER_TEMP/swiftlint.zip" -d "$RUNNER_TEMP/swiftlint"
+          echo "$RUNNER_TEMP/swiftlint" >> "$GITHUB_PATH"
+      - run: swiftlint --strict
+      - name: Design tokens are up to date
+        run: swift Scripts/generate-tokens.swift && git diff --exit-code
+      - run: swift test --package-path Packages/EstelaKit
+      - run: >
+          xcodebuild -project Estela.xcodeproj -scheme Estela -destination 'platform=macOS'
+          -derivedDataPath .build/DerivedData build test
