@@ -1,7 +1,9 @@
 use iced::{
-    widget::{button, column, container, image, row, slider, space, text, toggler},
+    widget::{button, column, container, image, row, slider, text, toggler},
     Alignment, Element, Length,
 };
+
+use estela_engine::api::ZoomTrigger;
 
 use crate::{
     app::App,
@@ -10,139 +12,33 @@ use crate::{
     views::recorder::{clock, error_view},
 };
 
+const PAGE_PADDING: u16 = 16;
+const SECTION_SPACING: f32 = 12.0;
+const CONTROL_SPACING: f32 = 8.0;
+const STAGE_PADDING: u16 = 16;
+const STAGE_RADIUS: f32 = 12.0;
+const TITLE_SIZE: f32 = 16.0;
+const CLOCK_SIZE: f32 = 14.0;
+const NOTE_SIZE: f32 = 12.0;
+
 pub(crate) fn view(app: &App) -> Element<'_, Message> {
-    let strings = &app.strings;
-    let title = app
-        .recording
-        .as_ref()
-        .map(|recording| recording.title.as_str())
-        .unwrap_or_default();
-    let canvas: Element<'_, Message> = if let Some(handle) = &app.image {
-        image(handle.clone())
-            .content_fit(iced::ContentFit::Contain)
-            .border_radius(12)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .into()
-    } else {
-        container(text(strings.get("loading")))
-            .center(Length::Fill)
-            .into()
-    };
-    let stage = container(container(canvas).padding(2).style(|_| container::Style {
-        background: Some(tokens::SURFACE.into()),
-        border: iced::Border {
-            radius: 12.0.into(),
-            ..Default::default()
-        },
-        shadow: iced::Shadow {
-            color: iced::Color::BLACK.scale_alpha(0.4),
-            offset: iced::Vector::new(0.0, 12.0),
-            blur_radius: 24.0,
-        },
-        ..Default::default()
-    }))
-    .padding(40)
-    .width(Length::Fill)
-    .height(Length::Fill)
-    .style(|_| container::Style {
-        background: Some(
-            iced::gradient::Linear::new(iced::Radians(0.75))
-                .add_stop(0.0, iced::Color::from_rgb8(57, 39, 100))
-                .add_stop(1.0, iced::Color::from_rgb8(20, 37, 61))
-                .into(),
-        ),
-        border: iced::Border {
-            radius: 14.0.into(),
-            ..Default::default()
-        },
-        ..Default::default()
-    });
-    let count = app
-        .recording
-        .as_ref()
-        .map_or(0, |recording| recording.zooms.len());
     let mut content = column![
-        row![
-            button(strings.get("new"))
-                .on_press(Message::New)
-                .style(button::text),
-            text(title).size(16),
-            space::horizontal(),
-            button(strings.get("open"))
-                .on_press(Message::Open)
-                .style(button::text),
-            button(strings.get("close"))
-                .on_press(Message::Close)
-                .style(button::text)
-        ]
-        .spacing(12)
-        .align_y(Alignment::Center),
-        row![
-            text(strings.get("preview")).size(24),
-            space::horizontal(),
-            text(format!("{count} {}", strings.get("zooms")))
-                .size(12)
-                .color(tokens::SECONDARY),
-            toggler(app.autozoom)
-                .label(strings.get("autozoom"))
-                .on_toggle(Message::AutoZoom)
-        ]
-        .spacing(16)
-        .align_y(Alignment::Center),
-        stage,
+        header(app),
+        stage(app),
         slider(0.0..=app.duration().max(0.001), app.position, Message::Seek)
             .step(0.001)
             .on_release(Message::SeekCommit),
-        row![
-            button(strings.get("frame-back"))
-                .on_press(Message::Step(-1))
-                .style(button::text),
-            button(strings.get(if app.playing { "play-pause" } else { "play" }))
-                .on_press(Message::Play)
-                .padding([10, 24]),
-            button(strings.get("frame-next"))
-                .on_press(Message::Step(1))
-                .style(button::text),
-            space::horizontal(),
-            text(format!(
-                "{} / {}",
-                clock(app.position),
-                clock(app.duration())
-            ))
-            .size(14),
-            button(strings.get("fullscreen"))
-                .on_press(Message::Fullscreen)
-                .style(button::text)
-        ]
-        .spacing(12)
-        .align_y(Alignment::Center),
-        text(strings.get("stored"))
-            .size(12)
-            .color(tokens::SECONDARY),
+        transport(app),
     ]
-    .spacing(16);
-    if let Some(recording) = &app.recording {
-        if recording.zoom_trigger == estela_engine::api::ZoomTrigger::CursorDwell {
-            content = content.push(
-                text(strings.get("wayland-dwell"))
-                    .size(12)
-                    .color(tokens::SECONDARY),
-            );
-        }
-        if recording.zoom_trigger == estela_engine::api::ZoomTrigger::Unavailable {
-            content = content.push(
-                text(strings.get("wayland-zoom"))
-                    .size(12)
-                    .color(tokens::SECONDARY),
-            );
-        }
+    .spacing(SECTION_SPACING);
+    for note in notes(app) {
+        content = content.push(note);
     }
     if let Some(error) = &app.error {
         content = content.push(error_view(app, error));
     }
     container(content)
-        .padding(16)
+        .padding(PAGE_PADDING)
         .width(Length::Fill)
         .height(Length::Fill)
         .style(|_| container::Style {
@@ -150,5 +46,116 @@ pub(crate) fn view(app: &App) -> Element<'_, Message> {
             text_color: Some(tokens::TEXT),
             ..Default::default()
         })
+        .into()
+}
+
+fn header(app: &App) -> Element<'_, Message> {
+    let strings = &app.strings;
+    let title = app
+        .recording
+        .as_ref()
+        .map(|recording| recording.title.as_str())
+        .unwrap_or_default();
+    // A long title is clipped so it never pushes the actions out of view.
+    let title = container(text(title).size(TITLE_SIZE).wrapping(text::Wrapping::None))
+        .width(Length::Fill)
+        .clip(true);
+    row![
+        title,
+        text_button(strings.get("new"), Message::New),
+        text_button(strings.get("open"), Message::Open),
+        text_button(strings.get("close"), Message::Close),
+    ]
+    .spacing(CONTROL_SPACING)
+    .align_y(Alignment::Center)
+    .into()
+}
+
+fn stage(app: &App) -> Element<'_, Message> {
+    let canvas: Element<'_, Message> = match &app.image {
+        Some(handle) => image(handle.clone())
+            .content_fit(iced::ContentFit::Contain)
+            .border_radius(STAGE_RADIUS)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into(),
+        None => text(app.strings.get("loading")).into(),
+    };
+    container(canvas)
+        .padding(STAGE_PADDING)
+        .center(Length::Fill)
+        .style(|_| container::Style {
+            background: Some(
+                iced::gradient::Linear::new(iced::Radians(0.75))
+                    .add_stop(0.0, iced::Color::from_rgb8(57, 39, 100))
+                    .add_stop(1.0, iced::Color::from_rgb8(20, 37, 61))
+                    .into(),
+            ),
+            border: iced::Border {
+                radius: STAGE_RADIUS.into(),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .into()
+}
+
+fn transport(app: &App) -> Element<'_, Message> {
+    let strings = &app.strings;
+    let count = app
+        .recording
+        .as_ref()
+        .map_or(0, |recording| recording.zooms.len());
+    let play = button(strings.get(if app.playing { "play-pause" } else { "play" }))
+        .on_press(Message::Play)
+        .padding([8, 20]);
+    let position = format!("{} / {}", clock(app.position), clock(app.duration()));
+    // Wrapping keeps every control reachable when the window is narrow.
+    row![
+        text_button(strings.get("frame-back"), Message::Step(-1)),
+        play,
+        text_button(strings.get("frame-next"), Message::Step(1)),
+        text(position).size(CLOCK_SIZE),
+        text_button(strings.get("fullscreen"), Message::Fullscreen),
+        toggler(app.autozoom)
+            .label(strings.get("autozoom"))
+            .on_toggle(Message::AutoZoom),
+        text(format!("{count} {}", strings.get("zooms")))
+            .size(NOTE_SIZE)
+            .color(tokens::SECONDARY),
+    ]
+    .spacing(CONTROL_SPACING)
+    .align_y(Alignment::Center)
+    .wrap()
+    .vertical_spacing(CONTROL_SPACING)
+    .into()
+}
+
+fn notes(app: &App) -> Vec<Element<'_, Message>> {
+    let strings = &app.strings;
+    let mut keys = vec!["stored"];
+    match app
+        .recording
+        .as_ref()
+        .map(|recording| recording.zoom_trigger)
+    {
+        Some(ZoomTrigger::CursorDwell) => keys.push("wayland-dwell"),
+        Some(ZoomTrigger::Unavailable) => keys.push("wayland-zoom"),
+        _ => {}
+    }
+    keys.into_iter()
+        .map(|key| {
+            text(strings.get(key))
+                .size(NOTE_SIZE)
+                .color(tokens::SECONDARY)
+                .into()
+        })
+        .collect()
+}
+
+fn text_button(label: &str, message: Message) -> Element<'_, Message> {
+    button(text(label))
+        .on_press(message)
+        .style(button::text)
         .into()
 }

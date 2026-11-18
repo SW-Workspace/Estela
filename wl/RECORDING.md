@@ -2,7 +2,7 @@
 
 This milestone records a screen or window, saves one local `.estela` file and
 plays it inside Estela with automatic zoom. Manual editing, export, microphone
-capture, hardware encoding and the database library are outside this milestone.
+capture and the database library are outside this milestone.
 The original media remains unchanged when automatic zoom is toggled in preview.
 
 ## Run
@@ -14,10 +14,14 @@ cargo run -p estela-app
 cargo run -p estela-app -- /path/to/recording.estela
 ```
 
-Install a dynamically linked **LGPL** FFmpeg build on `PATH`, or set
-`ESTELA_FFMPEG` to its executable path. The initial recording encoder uses
+Estela searches for FFmpeg in this order: `ESTELA_FFMPEG`, beside the Estela
+executable, in its `ffmpeg/` subdirectory, then on `PATH`. Bundle `ffmpeg.exe`
+and its matching DLLs on Windows, or `ffmpeg` and its runtime libraries on Linux.
+Paths beside Estela are resolved from its executable, not the working directory.
+An explicit `ESTELA_FFMPEG` override is authoritative, including when invalid.
+Use a dynamically linked **LGPL** build. The initial recording encoder uses
 FFmpeg's native MPEG-4 encoder rather than a GPL encoder. FFmpeg is a runtime
-requirement and is not downloaded or bundled by the application.
+requirement and is not downloaded by the application.
 
 Linux also requires PipeWire development headers, libclang, a C compiler,
 pkg-config, a working graphics driver and xdg-desktop-portal with the desktop's
@@ -35,6 +39,20 @@ sudo apt install libpipewire-0.3-dev libclang-dev pkg-config build-essential \
 Windows requires the Windows SDK and the MSVC Rust toolchain for the normal
 native build. Capture uses Windows Graphics Capture on Windows 10 2004 or newer.
 The workspace can also be checked for the Windows GNU target from Linux.
+
+Windows builds use the GUI subsystem, including development builds. Launch
+`estela-app.exe` directly from Explorer without keeping CMD open. To build a
+portable folder containing the required FFmpeg executable, run from `wl/`:
+
+```powershell
+./ci/package-windows.ps1 -FfmpegDirectory C:/Dependencies/ffmpeg/bin
+```
+
+The supplied directory must include a runnable dynamically linked LGPL build,
+its DLLs and legal notices. The script validates the runtime and MPEG-4 encoder
+and copies the whole directory to `target/windows-portable/ffmpeg/` alongside
+`target/windows-portable/estela-app.exe`. Distribute the complete portable folder.
+Verify its licenses and source information before distributing it.
 
 ## Flow
 
@@ -89,6 +107,42 @@ explicitly identified alternative, not a fabricated click log. If the compositor
 only supplies an embedded cursor, automatic zoom is unavailable and the interface
 explains that limitation. X11 window capture uses a Composite pixmap so overlapping
 controls are not included in the selected window's image.
+
+## Encoding backends
+
+The recording engine uses the shared `RecordingEncoder` contract. The platform
+adapter supplies the candidate order; the engine retains timing, pause/resume,
+cursor events and project finalization.
+
+Linux tries NVENC when an NVIDIA device is present, then VA-API for the discovered
+DRM render nodes, followed by FFmpeg's LGPL MPEG-4 software encoder. Device
+presence is only a candidate hint: each FFmpeg candidate must encode and decode frames
+at the actual source dimensions and frame rate before it can be selected.
+Windows first tries native Media Foundation H.264 with hardware transforms
+enabled, then falls back to FFmpeg's software MPEG-4 encoder if native
+initialization fails. Media Foundation may select a native software transform
+when the machine does not provide a usable hardware transform.
+
+Capability probes run during preparation, before the recorder reports readiness
+and before the countdown. Each FFmpeg probe subprocess has a ten-second timeout. The native Windows probe
+runs on a dedicated COM thread with a ten-second response deadline and verifies
+that finalization produced nonempty fragmented media. A stalled native thread
+cannot be forcibly terminated and may remain until the driver returns. Probes
+use temporary files and do not create the recording destination. A failed
+hardware probe falls through to the next candidate. The selected backend and
+rejection reasons are written to standard error.
+
+All current paths accept CPU RGBA frames and produce fragmented MP4 media.
+Windows converts RGBA to padded NV12 using limited-range BT.709 color and uses
+Media Foundation timestamps in 100-nanosecond units at the API boundary. They
+validate frame size and timestamps against the configured frame rate. There is
+no mid-recording encoder switch: a failure preserves the partial recording and
+reports an error. GPU texture and DMA-BUF transport remain a later optimization.
+Preview continues to use FFmpeg independently of the recording encoder choice.
+Windows native recording itself can prepare without FFmpeg, but the complete
+record-and-preview workflow still needs the bundled runtime.
+
+See [platform encoding](PLATFORM-ENCODING.md) for the implementation boundaries.
 
 ## Persistence and failures
 

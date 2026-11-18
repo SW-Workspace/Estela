@@ -13,6 +13,9 @@ use crate::{
 };
 
 pub const HEIGHT: f32 = 56.0;
+pub const HINT_WIDTH: u32 = 220;
+pub const HINT_HEIGHT: u32 = 30;
+const HINT_TEXT_SIZE: f32 = 12.0;
 const SOURCE_NAME_LIMIT: usize = 17;
 
 pub(crate) fn view(app: &App) -> Element<'_, Message> {
@@ -82,17 +85,12 @@ fn ready(app: &App) -> Element<'_, Message> {
     .padding([9, 14])
     .style(theme::record);
     row![
-        grip(app),
+        grip(),
         source,
         microphone(app),
         space::horizontal(),
         record,
-        control(
-            app,
-            Icon::More,
-            "more",
-            Message::TogglePopover(Popover::Menu)
-        )
+        bar_control(Icon::More, "more", Message::TogglePopover(Popover::Menu)),
     ]
     .spacing(6)
     .align_y(Alignment::Center)
@@ -133,11 +131,7 @@ fn active(app: &App) -> Element<'_, Message> {
     .padding(10)
     .on_press(Message::Pause)
     .style(if paused { theme::resume } else { theme::chip });
-    let pause = tooltip(
-        pause,
-        text(app.strings.get(if paused { "resume" } else { "pause" })).size(12),
-        tooltip::Position::Bottom,
-    );
+    let pause = hinted(pause, if paused { "resume" } else { "pause" });
     let stop = button(
         row![
             icon::view(Icon::Stop, tokens::RECORD, 13.0),
@@ -150,39 +144,55 @@ fn active(app: &App) -> Element<'_, Message> {
     .padding([9, 12])
     .style(theme::stop);
     row![
-        grip(app),
+        grip(),
         timer,
-        control(
-            app,
+        bar_control(
             Icon::MicOff,
             "no-audio",
-            Message::TogglePopover(Popover::Microphone)
+            Message::TogglePopover(Popover::Microphone),
         ),
         space::horizontal(),
         pause,
         stop,
-        control(app, Icon::Restart, "restart", Message::Restart),
-        control(
-            app,
-            Icon::More,
-            "more",
-            Message::TogglePopover(Popover::Menu)
-        )
+        bar_control(Icon::Restart, "restart", Message::Restart),
+        bar_control(Icon::More, "more", Message::TogglePopover(Popover::Menu)),
     ]
     .spacing(6)
     .align_y(Alignment::Center)
     .into()
 }
 
-fn grip(app: &App) -> Element<'_, Message> {
-    tooltip(
-        mouse_area(container(icon::view(Icon::Grip, tokens::SECONDARY, 16.0)).padding(7))
-            .on_press(Message::Drag)
-            .interaction(iced::mouse::Interaction::Grab),
-        text(app.strings.get("drag")).size(12),
-        tooltip::Position::Bottom,
-    )
-    .into()
+fn grip<'a>() -> Element<'a, Message> {
+    mouse_area(container(icon::view(Icon::Grip, tokens::SECONDARY, 16.0)).padding(7))
+        .on_press(Message::Drag)
+        .on_enter(Message::Hint(Some("drag")))
+        .on_exit(Message::Hint(None))
+        .interaction(iced::mouse::Interaction::Grab)
+        .into()
+}
+
+// Windows clips the bar window, so tooltips use a hint area the app knows.
+fn hinted<'a>(content: impl Into<Element<'a, Message>>, key: &'static str) -> Element<'a, Message> {
+    mouse_area(content)
+        .on_enter(Message::Hint(Some(key)))
+        .on_exit(Message::Hint(None))
+        .into()
+}
+
+fn bar_control<'a>(kind: Icon, key: &'static str, message: Message) -> Element<'a, Message> {
+    let button = button(icon::view(kind, tokens::SECONDARY, 16.0))
+        .padding(7)
+        .on_press(message)
+        .style(theme::quiet);
+    hinted(button, key)
+}
+
+pub(crate) fn hint<'a>(app: &'a App, key: &'a str) -> Element<'a, Message> {
+    container(text(app.strings.get(key)).size(HINT_TEXT_SIZE))
+        .center_x(HINT_WIDTH as f32)
+        .center_y(HINT_HEIGHT as f32)
+        .style(theme::pill)
+        .into()
 }
 
 fn microphone(app: &App) -> Element<'_, Message> {

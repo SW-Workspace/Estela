@@ -16,11 +16,13 @@ use estela_engine::{
     recording::{self, Recorder},
 };
 
-use crate::{localization::Strings, message::Message};
+use crate::{localization::Strings, message::Message, windows::recording_bar};
 
 const BAR_SIZE: Size = Size::new(600.0, 440.0);
-const SETUP_SIZE: Size = Size::new(600.0, 440.0);
-const PREVIEW_SIZE: Size = Size::new(1120.0, 780.0);
+const PREVIEW_SIZE: Size = Size::new(960.0, 600.0);
+const PREVIEW_MIN_SIZE: Size = Size::new(640.0, 420.0);
+// Leaves room for the taskbar and the native title bar around the preview.
+const PREVIEW_SCREEN_FRACTION: f32 = 0.85;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum State {
@@ -77,6 +79,7 @@ pub struct App {
     pub(crate) strings: Strings,
     pub(crate) state: State,
     pub(crate) popover: Option<Popover>,
+    pub(crate) hint: Option<&'static str>,
     pub(crate) preferences: Preferences,
     pub(crate) sources: Vec<Source>,
     pub(crate) selected: Option<Source>,
@@ -146,6 +149,7 @@ impl App {
             strings,
             state: State::Ready,
             popover: None,
+            hint: None,
             preferences,
             sources: Vec::new(),
             selected: None,
@@ -248,14 +252,26 @@ impl App {
         }
         let (id, open) = window::open(window::Settings {
             size: PREVIEW_SIZE,
-            min_size: Some(SETUP_SIZE),
+            min_size: Some(PREVIEW_MIN_SIZE),
             position: window::Position::Centered,
-            decorations: false,
+            decorations: true,
+            resizable: true,
             exit_on_close_request: false,
             ..Default::default()
         });
         self.preview_window = Some(id);
         Task::batch([open.map(Message::OpenedWindow), self.configure_input()])
+    }
+
+    fn fit_preview_window(&self, id: window::Id, monitor: Option<Size>) -> Task<Message> {
+        let fits = monitor.is_none_or(|monitor| {
+            PREVIEW_SIZE.width <= monitor.width * PREVIEW_SCREEN_FRACTION
+                && PREVIEW_SIZE.height <= monitor.height * PREVIEW_SCREEN_FRACTION
+        });
+        if fits || self.preview_window != Some(id) {
+            return Task::none();
+        }
+        window::maximize(id, true)
     }
 
     pub(crate) fn controls_hidden(&self) -> bool {
@@ -311,6 +327,14 @@ impl App {
                 width: width as u32,
                 height: height as u32,
                 radius: 14,
+            });
+        } else if self.hint.is_some() {
+            areas.push(api::InputArea {
+                x: (600 - recording_bar::HINT_WIDTH as i32) / 2,
+                y: 84,
+                width: recording_bar::HINT_WIDTH,
+                height: recording_bar::HINT_HEIGHT,
+                radius: recording_bar::HINT_HEIGHT / 2,
             });
         }
         api::WindowInput::Areas(areas)

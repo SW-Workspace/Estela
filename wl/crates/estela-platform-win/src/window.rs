@@ -1,9 +1,12 @@
+use std::{os::windows::process::CommandExt, process::Command};
+
 use raw_window_handle::{DisplayHandle, RawWindowHandle, WindowHandle};
 use windows::Win32::{
     Foundation::HWND,
     Graphics::Gdi::{
         CombineRgn, CreateRectRgn, CreateRoundRectRgn, DeleteObject, SetWindowRgn, RGN_OR,
     },
+    System::Threading::CREATE_NO_WINDOW,
 };
 
 use estela_capture::{window::WindowInput, Error, Result};
@@ -64,4 +67,8 @@ pub fn release(_: DisplayHandle<'_>) {}
 
 pub fn presentation_backend() -> &'static str {
     "wgpu"
+}
+
+pub fn hide_console(command: &mut Command) {
+    command.creation_flags(CREATE_NO_WINDOW.0);
 }

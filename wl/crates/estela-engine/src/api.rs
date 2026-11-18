@@ -40,3 +40,7 @@ pub fn release_window(display: DisplayHandle<'_>) {
 pub fn presentation_backend() -> &'static str {
     crate::platform::presentation_backend()
 }
+
+pub fn setup_graphical_subprocesses() {
+    crate::platform::setup_graphical_subprocesses();
+}

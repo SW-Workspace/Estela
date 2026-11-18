@@ -6,6 +6,7 @@ use estela_engine::api::{Recording, Source, SourceKind};
 pub enum Message {
     Tick,
     OpenedWindow(iced::window::Id),
+    PreviewMonitor(iced::window::Id, Option<iced::Size>),
     Configured(Result<bool, String>),
     Scale(iced::window::Id, f32),
     ChooseSource,
@@ -14,6 +15,7 @@ pub enum Message {
     Refresh,
     TogglePopover(crate::app::Popover),
     DismissPopover,
+    Hint(Option<&'static str>),
     RetryShortcuts,
     Kind(SourceKind),
     Source(Source),

@@ -6,6 +6,9 @@ pub mod demux;
 pub mod device;
 pub mod encode;
 pub mod link;
+mod runtime;
+
+pub use runtime::set_command_setup;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

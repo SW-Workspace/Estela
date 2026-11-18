@@ -5,6 +5,10 @@ impl App {
         match message {
             Message::Tick => return self.tick(),
             Message::OpenedWindow(id) => {
+                if self.preview_window == Some(id) {
+                    return window::monitor_size(id)
+                        .map(move |monitor| Message::PreviewMonitor(id, monitor));
+                }
                 if id != self.window {
                     return Task::none();
                 }
@@ -14,6 +18,7 @@ impl App {
                 }
                 return tasks;
             }
+            Message::PreviewMonitor(id, monitor) => return self.fit_preview_window(id, monitor),
             Message::Configured(Err(error)) => self.error = Some(error),
             Message::Configured(Ok(excluded)) => self.excluded = excluded,
             Message::Scale(id, scale) if id == self.window => {
@@ -45,6 +50,13 @@ impl App {
                 } else {
                     Some(popover)
                 };
+                return self.configure_input();
+            }
+            Message::Hint(hint) => {
+                if self.hint == hint {
+                    return Task::none();
+                }
+                self.hint = hint;
                 return self.configure_input();
             }
             Message::DismissPopover => {
