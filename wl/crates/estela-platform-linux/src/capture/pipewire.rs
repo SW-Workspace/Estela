@@ -18,8 +18,8 @@ use pipewire::{
             video::{VideoFormat, VideoInfoRaw},
             ParamType,
         },
-        pod::{Pod, Value},
-        utils::{Direction, SpaTypes},
+        pod::{ChoiceValue, Pod, Property, Value},
+        utils::{Choice, ChoiceEnum, ChoiceFlags, Direction, SpaTypes},
     },
 };
 
@@ -28,7 +28,10 @@ use estela_capture::{
     Error, Result,
 };
 
-const CURSOR_METADATA_SIZE: i32 = 262_192;
+const DEFAULT_CURSOR_EDGE: i32 = 64;
+const MIN_CURSOR_EDGE: i32 = 1;
+const MAX_CURSOR_EDGE: i32 = 1024;
+const CURSOR_BYTES_PER_PIXEL: i32 = 4;
 
 struct StreamData {
     format: VideoInfoRaw,
@@ -58,16 +61,29 @@ pub fn capture(
         sender,
         pointer,
     };
+    let cursor_metadata = cursor_metadata()?;
     let _listener = stream
         .add_local_listener_with_user_data(data)
-        .param_changed(|_, data, id, parameter| {
+        .param_changed(move |stream, data, id, parameter| {
             if id != ParamType::Format.as_raw() {
                 return;
             }
-            if let Some(parameter) = parameter {
-                if let Err(error) = data.format.parse(parameter) {
-                    let _ = data.sender.try_send(Err(backend(error)));
-                }
+            let Some(parameter) = parameter else {
+                return;
+            };
+            if let Err(error) = data.format.parse(parameter) {
+                let _ = data.sender.try_send(Err(backend(error)));
+                return;
+            }
+            let Some(cursor) = Pod::from_bytes(&cursor_metadata) else {
+                let _ = data
+                    .sender
+                    .try_send(Err(backend("Invalid cursor metadata")));
+                return;
+            };
+            // PipeWire negotiates buffer metadata after fixing the video format.
+            if let Err(error) = stream.update_params(&mut [cursor]) {
+                let _ = data.sender.try_send(Err(backend(error)));
             }
         })
         .state_changed(|_, data, old, state| {
@@ -132,30 +148,14 @@ pub fn capture(
             spa::utils::Fraction { num: fps, denom: 1 }
         ),
     );
-    let cursor = spa::pod::object!(
-        SpaTypes::ObjectParamMeta,
-        ParamType::Meta,
-        spa::pod::Property::new(
-            spa::sys::SPA_PARAM_META_type,
-            Value::Id(spa::utils::Id(spa::sys::SPA_META_Cursor))
-        ),
-        spa::pod::Property::new(
-            spa::sys::SPA_PARAM_META_size,
-            Value::Int(CURSOR_METADATA_SIZE)
-        ),
-    );
     let format_bytes = serialize(Value::Object(format))?;
-    let cursor_bytes = serialize(Value::Object(cursor))?;
-    let mut parameters = [
-        Pod::from_bytes(&format_bytes).ok_or_else(|| backend("Invalid stream format"))?,
-        Pod::from_bytes(&cursor_bytes).ok_or_else(|| backend("Invalid cursor format"))?,
-    ];
+    let format = Pod::from_bytes(&format_bytes).ok_or_else(|| backend("Invalid stream format"))?;
     stream
         .connect(
             Direction::Input,
             Some(node),
             pw::stream::StreamFlags::AUTOCONNECT | pw::stream::StreamFlags::MAP_BUFFERS,
-            &mut parameters,
+            &mut [format],
         )
         .map_err(backend)?;
     while !stop.load(Ordering::Acquire) {
@@ -164,6 +164,35 @@ pub fn capture(
             .iterate(pw::loop_::Timeout::Finite(Duration::from_millis(20)));
     }
     Ok(())
+}
+
+fn cursor_metadata() -> Result<Vec<u8>> {
+    let cursor = spa::pod::object!(
+        SpaTypes::ObjectParamMeta,
+        ParamType::Meta,
+        spa::pod::Property::new(
+            spa::sys::SPA_PARAM_META_type,
+            Value::Id(spa::utils::Id(spa::sys::SPA_META_Cursor))
+        ),
+        // Compositors can advertise different fixed cursor bitmap capacities.
+        Property::new(
+            spa::sys::SPA_PARAM_META_size,
+            Value::Choice(ChoiceValue::Int(Choice(
+                ChoiceFlags::empty(),
+                ChoiceEnum::Range {
+                    default: cursor_metadata_size(DEFAULT_CURSOR_EDGE),
+                    min: cursor_metadata_size(MIN_CURSOR_EDGE),
+                    max: cursor_metadata_size(MAX_CURSOR_EDGE),
+                },
+            )))
+        ),
+    );
+    serialize(Value::Object(cursor))
+}
+
+fn cursor_metadata_size(edge: i32) -> i32 {
+    let headers = size_of::<spa::sys::spa_meta_cursor>() + size_of::<spa::sys::spa_meta_bitmap>();
+    headers as i32 + edge * edge * CURSOR_BYTES_PER_PIXEL
 }
 
 fn serialize(value: Value) -> Result<Vec<u8>> {
