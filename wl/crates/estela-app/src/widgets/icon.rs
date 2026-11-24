@@ -19,6 +19,10 @@ pub enum Icon {
     Close,
     Check,
     Refresh,
+    Previous,
+    Next,
+    Maximize,
+    Zoom,
 }
 
 pub fn view<'a, Message: 'a>(kind: Icon, color: Color, size: f32) -> Element<'a, Message> {
@@ -33,7 +37,8 @@ pub fn view<'a, Message: 'a>(kind: Icon, color: Color, size: f32) -> Element<'a,
 impl Icon {
     fn bytes(self) -> &'static [u8] {
         match self {
-            Self::Grip | Self::More => include_bytes!("../../../../../assets/icons/more.svg"),
+            Self::Grip => include_bytes!("../../../../../assets/icons/grip.svg"),
+            Self::More => include_bytes!("../../../../../assets/icons/more.svg"),
             Self::Screen => include_bytes!("../../../../../assets/icons/monitor.svg"),
             Self::Window => include_bytes!("../../../../../assets/icons/window.svg"),
             Self::MicOff => include_bytes!("../../../../../assets/icons/mic-off.svg"),
@@ -49,6 +54,10 @@ impl Icon {
             Self::Settings => include_bytes!("../../../../../assets/icons/settings.svg"),
             Self::Keyboard => include_bytes!("../../../../../assets/icons/keyboard.svg"),
             Self::Close => include_bytes!("../../../../../assets/icons/x.svg"),
+            Self::Previous => include_bytes!("../../../../../assets/icons/chevron-left.svg"),
+            Self::Next => include_bytes!("../../../../../assets/icons/chevron-right.svg"),
+            Self::Maximize => include_bytes!("../../../../../assets/icons/maximize.svg"),
+            Self::Zoom => include_bytes!("../../../../../assets/icons/zoom.svg"),
             Self::Check => include_bytes!("../../../../../assets/icons/check.svg"),
         }
     }
