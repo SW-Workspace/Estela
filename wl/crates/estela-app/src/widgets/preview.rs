@@ -1,5 +1,5 @@
 use iced::{
-    widget::{button, column, container, image, row, slider, text, toggler},
+    widget::{column, container, image, row, slider, text, toggler, tooltip},
     Alignment, Element, Length,
 };
 
@@ -10,6 +10,8 @@ use crate::{
     message::Message,
     theme::tokens,
     views::recorder::{clock, error_view},
+    widgets::icon::{self, Icon},
+    windows::recording_bar::control,
 };
 
 const PAGE_PADDING: u16 = 16;
@@ -31,9 +33,6 @@ pub(crate) fn view(app: &App) -> Element<'_, Message> {
         transport(app),
     ]
     .spacing(SECTION_SPACING);
-    for note in notes(app) {
-        content = content.push(note);
-    }
     if let Some(error) = &app.error {
         content = content.push(error_view(app, error));
     }
@@ -50,7 +49,6 @@ pub(crate) fn view(app: &App) -> Element<'_, Message> {
 }
 
 fn header(app: &App) -> Element<'_, Message> {
-    let strings = &app.strings;
     let title = app
         .recording
         .as_ref()
@@ -62,9 +60,9 @@ fn header(app: &App) -> Element<'_, Message> {
         .clip(true);
     row![
         title,
-        text_button(strings.get("new"), Message::New),
-        text_button(strings.get("open"), Message::Open),
-        text_button(strings.get("close"), Message::Close),
+        control(app, Icon::Record, "new", Message::New),
+        control(app, Icon::Folder, "open", Message::Open),
+        control(app, Icon::Close, "close", Message::Close),
     ]
     .spacing(CONTROL_SPACING)
     .align_y(Alignment::Center)
@@ -101,28 +99,20 @@ fn stage(app: &App) -> Element<'_, Message> {
 }
 
 fn transport(app: &App) -> Element<'_, Message> {
-    let strings = &app.strings;
-    let count = app
-        .recording
-        .as_ref()
-        .map_or(0, |recording| recording.zooms.len());
-    let play = button(strings.get(if app.playing { "play-pause" } else { "play" }))
-        .on_press(Message::Play)
-        .padding([8, 20]);
+    let (play_icon, play_label) = if app.playing {
+        (Icon::Pause, "play-pause")
+    } else {
+        (Icon::Play, "play")
+    };
     let position = format!("{} / {}", clock(app.position), clock(app.duration()));
     // Wrapping keeps every control reachable when the window is narrow.
     row![
-        text_button(strings.get("frame-back"), Message::Step(-1)),
-        play,
-        text_button(strings.get("frame-next"), Message::Step(1)),
+        control(app, Icon::Previous, "frame-back", Message::Step(-1)),
+        control(app, play_icon, play_label, Message::Play),
+        control(app, Icon::Next, "frame-next", Message::Step(1)),
         text(position).size(CLOCK_SIZE),
-        text_button(strings.get("fullscreen"), Message::Fullscreen),
-        toggler(app.autozoom)
-            .label(strings.get("autozoom"))
-            .on_toggle(Message::AutoZoom),
-        text(format!("{count} {}", strings.get("zooms")))
-            .size(NOTE_SIZE)
-            .color(tokens::SECONDARY),
+        control(app, Icon::Maximize, "fullscreen", Message::Fullscreen),
+        zoom_control(app),
     ]
     .spacing(CONTROL_SPACING)
     .align_y(Alignment::Center)
@@ -131,31 +121,37 @@ fn transport(app: &App) -> Element<'_, Message> {
     .into()
 }
 
-fn notes(app: &App) -> Vec<Element<'_, Message>> {
+fn zoom_control(app: &App) -> Element<'_, Message> {
     let strings = &app.strings;
-    let mut keys = vec!["stored"];
-    match app
+    let count = app
+        .recording
+        .as_ref()
+        .map_or(0, |recording| recording.zooms.len());
+    let mut hint = column![text(strings.get("autozoom")).size(NOTE_SIZE)];
+    let note = match app
         .recording
         .as_ref()
         .map(|recording| recording.zoom_trigger)
     {
-        Some(ZoomTrigger::CursorDwell) => keys.push("wayland-dwell"),
-        Some(ZoomTrigger::Unavailable) => keys.push("wayland-zoom"),
-        _ => {}
+        Some(ZoomTrigger::CursorDwell) => Some("wayland-dwell"),
+        Some(ZoomTrigger::Unavailable) => Some("wayland-zoom"),
+        _ => None,
+    };
+    if let Some(key) = note {
+        hint = hint.push(text(strings.get(key)).size(NOTE_SIZE));
     }
-    keys.into_iter()
-        .map(|key| {
-            text(strings.get(key))
+    tooltip(
+        row![
+            icon::view(Icon::Zoom, tokens::SECONDARY, 16.0),
+            text(count.to_string())
                 .size(NOTE_SIZE)
-                .color(tokens::SECONDARY)
-                .into()
-        })
-        .collect()
-}
-
-fn text_button(label: &str, message: Message) -> Element<'_, Message> {
-    button(text(label))
-        .on_press(message)
-        .style(button::text)
-        .into()
+                .color(tokens::SECONDARY),
+            toggler(app.autozoom).on_toggle(Message::AutoZoom),
+        ]
+        .spacing(CONTROL_SPACING)
+        .align_y(Alignment::Center),
+        hint.max_width(280),
+        tooltip::Position::Top,
+    )
+    .into()
 }

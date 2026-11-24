@@ -215,21 +215,72 @@ fn draw_cursor(
         + f64::from(size.0) / 2.0) as i32;
     let y = ((f64::from(y) * f64::from(size.1) / f64::from(recording.height) - center.1) * scale
         + f64::from(size.1) / 2.0) as i32;
-    for dy in 0..20 {
-        for dx in 0..12 {
-            if dx > dy / 2 {
-                continue;
+    paint_arrow(output, size, (x, y));
+}
+
+const CURSOR_WIDTH: i32 = 20;
+const CURSOR_HEIGHT: i32 = 29;
+const CURSOR_OUTLINE: [(f32, f32); 7] = [
+    (0.0, 0.0),
+    (20.0, 16.0),
+    (12.0, 17.0),
+    (17.0, 26.0),
+    (12.0, 29.0),
+    (7.0, 20.0),
+    (1.0, 26.0),
+];
+const CURSOR_FILL: [(f32, f32); 7] = [
+    (2.0, 4.0),
+    (15.0, 14.8),
+    (9.0, 15.7),
+    (14.5, 25.3),
+    (12.8, 26.3),
+    (7.4, 16.8),
+    (2.8, 21.8),
+];
+const CURSOR_BORDER: [u16; 3] = [20, 20, 24];
+const CURSOR_WHITE: u16 = 255;
+const CURSOR_SAMPLE_OFFSETS: [(f32, f32); 4] =
+    [(0.25, 0.25), (0.75, 0.25), (0.25, 0.75), (0.75, 0.75)];
+
+fn paint_arrow(output: &mut [u8], size: (u32, u32), origin: (i32, i32)) {
+    for y in origin.1.max(0)..(origin.1.saturating_add(CURSOR_HEIGHT)).min(size.1 as i32) {
+        for x in origin.0.max(0)..(origin.0.saturating_add(CURSOR_WIDTH)).min(size.0 as i32) {
+            let offset = (y as usize * size.0 as usize + x as usize) * 4;
+            let pixel = &mut output[offset..offset + 4];
+            let mut outline = 0;
+            let mut fill = 0;
+            for (sample_x, sample_y) in CURSOR_SAMPLE_OFFSETS {
+                let point = (
+                    (x - origin.0) as f32 + sample_x,
+                    (y - origin.1) as f32 + sample_y,
+                );
+                if inside_arrow(point, &CURSOR_OUTLINE) {
+                    outline += 1;
+                    fill += u16::from(inside_arrow(point, &CURSOR_FILL));
+                }
             }
-            let (px, py) = (x + dx, y + dy);
-            if px >= 0 && py >= 0 && px < size.0 as i32 && py < size.1 as i32 {
-                let offset = ((py as u32 * size.0 + px as u32) * 4) as usize;
-                let border = dx == 0 || dx == dy / 2 || dy == 19;
-                output[offset..offset + 4].copy_from_slice(if border {
-                    &[20, 20, 24, 255]
-                } else {
-                    &[255, 255, 255, 255]
-                });
+            let samples = CURSOR_SAMPLE_OFFSETS.len() as u16;
+            for (channel, border) in pixel.iter_mut().zip(CURSOR_BORDER) {
+                *channel = ((u16::from(*channel) * (samples - outline)
+                    + border * (outline - fill)
+                    + CURSOR_WHITE * fill)
+                    / samples) as u8;
             }
         }
     }
+}
+
+fn inside_arrow((x, y): (f32, f32), vertices: &[(f32, f32); 7]) -> bool {
+    let mut inside = false;
+    let mut previous = vertices[vertices.len() - 1];
+    for &current in vertices {
+        if (current.1 > y) != (previous.1 > y)
+            && x < current.0 + (previous.0 - current.0) * (y - current.1) / (previous.1 - current.1)
+        {
+            inside = !inside;
+        }
+        previous = current;
+    }
+    inside
 }
