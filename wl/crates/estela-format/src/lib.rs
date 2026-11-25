@@ -14,6 +14,10 @@ pub mod writer;
 pub enum Error {
     #[error("Operation not implemented")]
     NotImplemented,
+    #[error("Invalid Estela file: {0}")]
+    Invalid(String),
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }

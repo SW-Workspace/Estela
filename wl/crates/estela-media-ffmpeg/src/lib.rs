@@ -6,11 +6,16 @@ pub mod demux;
 pub mod device;
 pub mod encode;
 pub mod link;
+mod runtime;
+
+pub use runtime::set_command_setup;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Operation not implemented")]
     NotImplemented,
+    #[error("Media backend failed: {0}")]
+    Backend(String),
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }

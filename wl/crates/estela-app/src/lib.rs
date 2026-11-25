@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 pub mod app;
 pub mod integration;
+mod localization;
 pub mod message;
 pub mod system;
 pub mod theme;

@@ -1,1 +1,43 @@
+use std::path::PathBuf;
 
+use estela_engine::api::{Recording, Source, SourceKind};
+
+#[derive(Debug, Clone)]
+pub enum Message {
+    Tick,
+    OpenedWindow(iced::window::Id),
+    PreviewMonitor(iced::window::Id, Option<iced::Size>),
+    Configured(Result<bool, String>),
+    Scale(iced::window::Id, f32),
+    ChooseSource,
+    Moved(iced::window::Id, iced::Point),
+    Sources(std::result::Result<Vec<Source>, String>),
+    Refresh,
+    TogglePopover(crate::app::Popover),
+    DismissPopover,
+    Hint(Option<&'static str>),
+    RetryShortcuts,
+    Kind(SourceKind),
+    Source(Source),
+    Fps(u32),
+    Countdown(bool),
+    Record,
+    Start,
+    Pause,
+    Stop,
+    Restart,
+    Cancel,
+    Drag,
+    Close,
+    Dismiss,
+    New,
+    Open,
+    Picked(Option<PathBuf>),
+    Loaded(PathBuf, std::result::Result<Recording, String>),
+    Play,
+    Seek(f64),
+    SeekCommit,
+    Step(i32),
+    AutoZoom(bool),
+    Fullscreen,
+}

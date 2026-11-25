@@ -9,3 +9,6 @@ publish.workspace = true
 estela-model.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+
+serde.workspace = true
+crc32fast.workspace = true

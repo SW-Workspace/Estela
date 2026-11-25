@@ -38,7 +38,8 @@
     "estela-audio",
     "estela-media-ffmpeg",
     "estela-platform-win",
-    "estela-platform-linux"
+    "estela-platform-linux",
+    "estela-model"
   ],
   "estela-library": [
     "estela-format"
