@@ -9,6 +9,7 @@ finish-args:
   - --socket=fallback-x11
   - --device=dri
   - --socket=pulseaudio
+  - --filesystem=xdg-run/pipewire-0
 modules:
   - name: ffmpeg-lgpl
     buildsystem: autotools

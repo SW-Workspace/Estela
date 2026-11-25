@@ -36,7 +36,6 @@
   "fullscreen": "Pantalla completa",
   "countdown-setting": "Cuenta regresiva de 3 segundos",
   "fps": "Fotogramas por segundo",
-  "silent": "Solo vídeo · en esta fase no se graba el micrófono",
   "shortcuts": "Ctrl+Shift+8  Grabar / detener     Ctrl+Shift+9  Pausar / reanudar",
   "shortcuts-pending": "Esperando permiso para los atajos globales…",
   "shortcuts-failed": "Los atajos globales no están disponibles. Para grabar la pantalla y ocultar los controles hace falta autorizarlos.",
@@ -66,5 +65,7 @@
   "quit": "Salir de Estela",
   "retry-shortcuts": "Reintentar permiso de atajos",
   "shortcuts-ready": "Los atajos globales están listos. Los controles se ocultan al grabar la pantalla.",
-  "mute-microphone": "Silenciar micrófono"
+  "default-microphone": "Predeterminado del sistema",
+  "microphone-unavailable": "El micrófono seleccionado no está disponible",
+  "microphones-list-failed": "No se pudieron listar los micrófonos."
 }

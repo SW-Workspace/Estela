@@ -16,9 +16,13 @@ pub use estela_platform_win::window::{
 
 #[cfg(target_os = "linux")]
 pub use estela_platform_linux::encoding::recording_backends;
+#[cfg(target_os = "linux")]
+pub use estela_platform_linux::microphone;
 
 #[cfg(windows)]
 pub use estela_platform_win::encoding::recording_backends;
+#[cfg(windows)]
+pub use estela_platform_win::microphone;
 
 #[cfg(windows)]
 pub use estela_platform_win::encoding::native_factory;

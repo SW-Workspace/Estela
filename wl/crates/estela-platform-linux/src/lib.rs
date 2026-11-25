@@ -7,11 +7,14 @@ pub mod cursor;
 pub mod encoding;
 pub mod input;
 pub mod interop;
+pub mod microphone;
 mod portal_runtime;
 pub mod session;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("PipeWire audio failed: {0}")]
+    Audio(String),
     #[error("Operation not implemented")]
     NotImplemented,
     #[error(transparent)]

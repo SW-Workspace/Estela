@@ -146,11 +146,7 @@ fn active(app: &App) -> Element<'_, Message> {
     row![
         grip(),
         timer,
-        bar_control(
-            Icon::MicOff,
-            "no-audio",
-            Message::TogglePopover(Popover::Microphone),
-        ),
+        microphone(app),
         space::horizontal(),
         pause,
         stop,
@@ -196,9 +192,14 @@ pub(crate) fn hint<'a>(app: &'a App, key: &'a str) -> Element<'a, Message> {
 }
 
 fn microphone(app: &App) -> Element<'_, Message> {
+    let (kind, color, label) = if app.preferences.microphone_enabled {
+        (Icon::Mic, tokens::SECONDARY, "microphone")
+    } else {
+        (Icon::MicOff, tokens::WARNING, "no-audio")
+    };
     let content = row![
-        icon::view(Icon::MicOff, tokens::WARNING, 15.0),
-        text(app.strings.get("no-audio")).size(12)
+        icon::view(kind, color, 15.0),
+        text(app.strings.get(label)).size(12)
     ]
     .spacing(6)
     .align_y(Alignment::Center);

@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
-use estela_engine::api::{Recording, Source, SourceKind};
+use estela_engine::{
+    api::{Recording, Source, SourceKind},
+    recording::{MicrophoneDevice, MicrophoneInput},
+};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -13,6 +16,8 @@ pub enum Message {
     Moved(iced::window::Id, iced::Point),
     Sources(std::result::Result<Vec<Source>, String>),
     Refresh,
+    Microphones(Result<Vec<MicrophoneDevice>, String>),
+    Microphone(MicrophoneInput),
     TogglePopover(crate::app::Popover),
     DismissPopover,
     Hint(Option<&'static str>),

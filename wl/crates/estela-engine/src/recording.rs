@@ -12,13 +12,24 @@ use estela_media::recording::{RecordingConfig, RecordingEncoder, RecordingFrame}
 use crate::{Error, Result};
 
 mod encoder;
+mod microphone;
+
+pub use estela_capture::microphone::{Device as MicrophoneDevice, Input as MicrophoneInput};
+
+pub fn microphones() -> Result<Vec<MicrophoneDevice>> {
+    let mut devices = crate::platform::microphone::devices()
+        .map_err(|error| Error::Recording(error.to_string()))?;
+    devices.sort_by(|left, right| left.name.cmp(&right.name).then(left.id.cmp(&right.id)));
+    Ok(devices)
+}
 
 const FRAME_TIMEOUT: Duration = Duration::from_millis(8);
 const SOURCE_TIMEOUT: Duration = Duration::from_secs(15);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Command {
     Start,
+    StartWithMicrophone(MicrophoneInput),
     Pause,
     Resume,
     Stop,
@@ -132,13 +143,14 @@ fn record_session(
             zoom_trigger: trigger,
         })
         .map_err(|error| Error::Recording(error.to_string()))?;
-    loop {
+    let input = loop {
         match pending
             .take()
             .map(Ok)
             .unwrap_or_else(|| commands.recv_timeout(FRAME_TIMEOUT))
         {
-            Ok(Command::Start) => break,
+            Ok(Command::Start) => break MicrophoneInput::Muted,
+            Ok(Command::StartWithMicrophone(input)) => break input,
             Ok(Command::Stop | Command::Discard) | Err(mpsc::RecvTimeoutError::Disconnected) => {
                 let _ = sender.send(Event::Discarded);
                 return Ok(());
@@ -147,7 +159,7 @@ fn record_session(
                 let _ = session.next_frame(FRAME_TIMEOUT)?;
             }
         }
-    }
+    };
     let first = first_frame(session.as_mut())?;
     let size = (first.width, first.height);
     if size != (config.width, config.height) {
@@ -160,19 +172,24 @@ fn record_session(
             .ok_or_else(|| Error::Recording("Missing destination directory".into()))?,
     )?;
     let partial = path.with_extension("partial.estela");
+    let mut microphone = microphone::Microphone::open(input, &partial)?;
     let mut encoder = prepared_encoder.start(&partial)?;
     let mut timeline = Timeline::new(first, fps, embedded, trigger);
     let result = capture_loop(
         session.as_mut(),
         encoder.as_mut(),
         &mut timeline,
+        microphone.as_mut(),
         &commands,
         sender,
     );
     drop(session);
+    if let Some(microphone) = microphone.as_mut() {
+        microphone.stop();
+    }
     let _ = sender.send(Event::Finalizing);
-    let discard = result?;
     let finished = encoder.finish();
+    let discard = result?;
     if discard || timeline.frames == 0 {
         if let Err(error) = std::fs::remove_file(&partial) {
             if error.kind() != std::io::ErrorKind::NotFound {
@@ -183,6 +200,9 @@ fn record_session(
         return Ok(());
     }
     finished.map_err(|error| Error::Recording(error.to_string()))?;
+    if let Some(microphone) = microphone {
+        microphone.mux(&partial)?;
+    }
     let mut recording = timeline.recording(
         path.file_stem()
             .and_then(|stem| stem.to_str())
@@ -232,25 +252,43 @@ fn capture_loop(
     session: &mut dyn Session,
     encoder: &mut dyn RecordingEncoder,
     timeline: &mut Timeline,
+    mut microphone: Option<&mut microphone::Microphone>,
     commands: &Receiver<Command>,
     sender: &Sender<Event>,
 ) -> Result<bool> {
     let mut next_frame = Instant::now();
+    if let Some(microphone) = microphone.as_deref_mut() {
+        microphone.resume(next_frame);
+    }
     let interval = Duration::from_secs_f64(1.0 / f64::from(timeline.fps));
     let mut paused = false;
     loop {
         match commands.try_recv() {
-            Ok(Command::Stop) | Err(mpsc::TryRecvError::Disconnected) => return Ok(false),
+            Ok(Command::Stop) | Err(mpsc::TryRecvError::Disconnected) => {
+                if let (false, Some(microphone)) = (paused, microphone.as_deref_mut()) {
+                    microphone.end_segment(timeline.frames, timeline.fps)?;
+                }
+                return Ok(false);
+            }
             Ok(Command::Discard) => return Ok(true),
-            Ok(Command::Pause) => {
+            Ok(Command::Pause) if !paused => {
+                if let Some(microphone) = microphone.as_deref_mut() {
+                    microphone.end_segment(timeline.frames, timeline.fps)?;
+                }
                 paused = true;
                 let _ = sender.send(Event::Paused);
             }
-            Ok(Command::Resume) => {
+            Ok(Command::Resume) if paused => {
                 paused = false;
                 next_frame = Instant::now();
+                if let Some(microphone) = microphone.as_deref_mut() {
+                    microphone.resume(next_frame);
+                }
             }
             _ => {}
+        }
+        if let Some(microphone) = microphone.as_deref_mut() {
+            microphone.drain(paused)?;
         }
         if let Some(frame) = session.next_frame(FRAME_TIMEOUT)? {
             if (frame.width, frame.height) != (timeline.frame.width, timeline.frame.height) {

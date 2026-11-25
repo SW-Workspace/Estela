@@ -63,6 +63,10 @@ pub(crate) struct Preferences {
     pub countdown: bool,
     pub fps: u32,
     pub position: Option<(f32, f32)>,
+    #[serde(default)]
+    pub microphone_enabled: bool,
+    #[serde(default)]
+    pub microphone_id: Option<String>,
 }
 
 impl Default for Preferences {
@@ -71,7 +75,22 @@ impl Default for Preferences {
             countdown: true,
             fps: 60,
             position: None,
+            microphone_enabled: false,
+            microphone_id: None,
         }
+    }
+}
+
+impl Preferences {
+    pub(crate) fn microphone(&self) -> recording::MicrophoneInput {
+        use recording::MicrophoneInput;
+
+        if !self.microphone_enabled {
+            return MicrophoneInput::Muted;
+        }
+        self.microphone_id
+            .clone()
+            .map_or(MicrophoneInput::Default, MicrophoneInput::Device)
     }
 }
 
@@ -82,6 +101,8 @@ pub struct App {
     pub(crate) hint: Option<&'static str>,
     pub(crate) preferences: Preferences,
     pub(crate) sources: Vec<Source>,
+    pub(crate) microphones: Vec<recording::MicrophoneDevice>,
+    pub(crate) microphone_error: bool,
     pub(crate) selected: Option<Source>,
     pub(crate) kind: SourceKind,
     pub(crate) error: Option<String>,
@@ -152,6 +173,8 @@ impl App {
             hint: None,
             preferences,
             sources: Vec::new(),
+            microphones: Vec::new(),
+            microphone_error: false,
             selected: None,
             kind: SourceKind::Display,
             error: None,

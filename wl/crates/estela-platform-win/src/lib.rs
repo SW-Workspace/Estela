@@ -7,6 +7,7 @@ pub mod cursor;
 pub mod encoding;
 pub mod input;
 pub mod interop;
+pub mod microphone;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
