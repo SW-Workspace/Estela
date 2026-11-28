@@ -144,6 +144,23 @@ record-and-preview workflow still needs the bundled runtime.
 
 See [platform encoding](PLATFORM-ENCODING.md) for the implementation boundaries.
 
+## Microphone audio
+
+The recorder can use the system default microphone or a listed capture device.
+The microphone starts muted for new preferences. The selected device is saved
+locally and resolved when the take starts.
+
+Windows enumerates capture endpoints with MMDevice and captures with shared,
+event-driven WASAPI. Packet timestamps use the Windows performance counter.
+Linux enumerates PipeWire audio sources and captures from the selected node
+through the PipeWire session. Packet timing uses the graph clock and latency.
+
+Both backends feed 48 kHz mono PCM into the same recording clock as the video.
+Pauses remove the corresponding interval from both tracks. On a clean stop,
+FFmpeg encodes the microphone as AAC and adds it to the fragmented MP4 inside
+the `.estela` file while copying the existing video stream. The recorder's
+built-in preview currently plays video only.
+
 ## Persistence and failures
 
 A take is written as fragmented media to a unique `.partial.estela` file. A clean
@@ -175,8 +192,17 @@ cargo xtask check-sqlx
 With FFmpeg installed, run the explicit media integration checks:
 
 ```sh
-cargo test -p estela-engine --lib -- --ignored
+cargo test -p estela-engine --lib -- --ignored --skip selected_microphone_stays_aligned_across_a_pause
 cargo test -p estela-engine --test recording_roundtrip -- --ignored
+```
+
+Run the microphone integration check with the ID of a test input that plays a
+continuous tone. Use a PipeWire node name on Linux or an MMDevice endpoint ID
+on Windows.
+
+```sh
+ESTELA_TEST_MICROPHONE=estela_tone_microphone \
+    cargo test -p estela-engine selected_microphone_stays_aligned_across_a_pause -- --ignored
 ```
 
 The X11 overlap regression must run on an isolated server, never the real desktop:
@@ -206,9 +232,8 @@ Tiny-skia/softbuffer is not used on Wayland because its XRGB buffers lose alpha.
 ## Recorder controls on Linux
 
 The source selector, microphone status, Record button and options menu stay in
-one persistent row. Options open below it: screen/window selection, microphone
-status, frame rate/countdown settings, shortcuts and opening existing recordings.
-The microphone remains explicitly muted in this video-only milestone.
+one persistent row. Panels below it provide screen and window selection,
+microphone selection, frame rate and countdown settings, and shortcuts.
 
 The recorder keeps one transparent surface throughout its lifetime. Panels are
 centered below the bar without resizing or replacing its native window. Preview

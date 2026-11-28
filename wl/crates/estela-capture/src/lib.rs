@@ -2,6 +2,7 @@
 pub mod clock;
 pub mod error;
 pub mod input;
+pub mod microphone;
 pub mod screen;
 pub mod session;
 

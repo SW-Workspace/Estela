@@ -146,3 +146,65 @@ fn stopping_before_the_first_encoded_frame_discards_the_empty_take() {
     assert!(!path.with_extension("partial.estela").exists());
     assert!(!path.with_extension("partial.log").exists());
 }
+
+#[test]
+#[ignore = "Requires FFmpeg and a test audio source playing a continuous tone."]
+fn selected_microphone_stays_aligned_across_a_pause() {
+    let input = std::env::var("ESTELA_TEST_MICROPHONE").unwrap();
+    assert!(microphones()
+        .unwrap()
+        .iter()
+        .any(|device| device.id == input));
+    let unique = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos();
+    let path = std::env::temp_dir().join(format!("estela-microphone-{unique}.estela"));
+    let output = path.clone();
+    let (commands, receiver) = mpsc::channel();
+    let (sender, events) = mpsc::channel();
+    let worker = std::thread::spawn(move || {
+        if let Err(error) = record_session(Box::new(TestSource), output, 30, receiver, &sender) {
+            sender.send(Event::Failed(error.to_string())).unwrap();
+        }
+    });
+
+    wait_for(&events, |event| matches!(event, Event::Prepared { .. }));
+    commands
+        .send(Command::StartWithMicrophone(MicrophoneInput::Device(input)))
+        .unwrap();
+    wait_for(
+        &events,
+        |event| matches!(event, Event::Progress { seconds } if *seconds >= 0.5),
+    );
+    commands.send(Command::Pause).unwrap();
+    wait_for(&events, |event| matches!(event, Event::Paused));
+    std::thread::sleep(Duration::from_millis(600));
+    commands.send(Command::Resume).unwrap();
+    wait_for(
+        &events,
+        |event| matches!(event, Event::Progress { seconds } if *seconds >= 1.0),
+    );
+    commands.send(Command::Stop).unwrap();
+    wait_for(&events, |event| matches!(event, Event::Finished { .. }));
+    worker.join().unwrap();
+
+    let recording = estela_format::reader::open(&path).unwrap();
+    let output = std::process::Command::new("ffmpeg")
+        .args(["-v", "error", "-i"])
+        .arg(&path)
+        .args(["-map", "0:a:0", "-f", "s16le", "pipe:1"])
+        .output()
+        .unwrap();
+    std::fs::remove_file(path).unwrap();
+    assert!(output.status.success(), "{:?}", output.stderr);
+    let (pcm, remainder) = output.stdout.as_chunks::<2>();
+    assert!(remainder.is_empty());
+    let samples: Vec<_> = pcm.iter().copied().map(i16::from_le_bytes).collect();
+    let expected = recording.frames as usize * 1_600;
+    assert!(samples.len().abs_diff(expected) <= 1_024);
+    for center in [expected / 4, expected * 3 / 4] {
+        let window = &samples[center..center + 2_400];
+        assert!(window.iter().any(|sample| sample.unsigned_abs() > 100));
+    }
+}

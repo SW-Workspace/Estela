@@ -3,10 +3,13 @@ use iced::{
     Alignment, Element, Length,
 };
 
-use estela_engine::api::{Source, SourceKind, SourceSelection};
+use estela_engine::{
+    api::{Source, SourceKind, SourceSelection},
+    recording::MicrophoneInput,
+};
 
 use crate::{
-    app::{App, Popover},
+    app::{App, Popover, State},
     message::Message,
     theme::{self, tokens},
     widgets::icon::{self, Icon},
@@ -169,23 +172,59 @@ fn source_item<'a>(app: &'a App, source: &'a Source) -> Element<'a, Message> {
         .into()
 }
 
+#[derive(Clone, PartialEq)]
+struct MicrophoneChoice {
+    label: String,
+    input: MicrophoneInput,
+}
+
+impl MicrophoneChoice {
+    fn new(label: &str, input: MicrophoneInput) -> Self {
+        Self {
+            label: label.into(),
+            input,
+        }
+    }
+}
+
+impl std::fmt::Display for MicrophoneChoice {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.label)
+    }
+}
+
 fn microphone(app: &App) -> Element<'_, Message> {
-    column![
-        heading(app, "microphone"),
-        row![
-            icon::view(Icon::MicOff, tokens::WARNING, 20.0),
-            text(app.strings.get("no-audio"))
-                .size(14)
-                .color(tokens::WARNING)
-        ]
-        .spacing(10),
-        checkbox(true).label(app.strings.get("mute-microphone")),
-        text(app.strings.get("silent"))
-            .size(13)
-            .color(tokens::SECONDARY)
-    ]
-    .spacing(12)
-    .into()
+    let mut choices = vec![
+        MicrophoneChoice::new(app.strings.get("no-audio"), MicrophoneInput::Muted),
+        MicrophoneChoice::new(
+            app.strings.get("default-microphone"),
+            MicrophoneInput::Default,
+        ),
+    ];
+    choices.extend(app.microphones.iter().map(|device| {
+        MicrophoneChoice::new(&device.name, MicrophoneInput::Device(device.id.clone()))
+    }));
+    let input = app.preferences.microphone();
+    let selected = choices.iter().find(|choice| choice.input == input).cloned();
+    let mut content = column![heading(app, "microphone")].spacing(12);
+    if app.state == State::Ready {
+        content = content.push(
+            pick_list(choices, selected, |choice| {
+                Message::Microphone(choice.input)
+            })
+            .placeholder(app.strings.get("microphone-unavailable"))
+            .width(Length::Fill),
+        );
+        if app.microphone_error {
+            content = content.push(text(app.strings.get("microphones-list-failed")).size(13));
+        }
+    } else {
+        let label = selected
+            .as_ref()
+            .map_or(app.strings.get("microphone"), |choice| &choice.label);
+        content = content.push(text(label.to_owned()).size(14));
+    }
+    content.into()
 }
 
 fn menu(app: &App) -> Element<'_, Message> {
@@ -246,10 +285,7 @@ fn settings(app: &App) -> Element<'_, Message> {
         .align_y(Alignment::Center),
         checkbox(app.preferences.countdown)
             .label(app.strings.get("countdown-setting"))
-            .on_toggle(Message::Countdown),
-        text(app.strings.get("silent"))
-            .size(12)
-            .color(tokens::SECONDARY)
+            .on_toggle(Message::Countdown)
     ]
     .spacing(16)
     .into()

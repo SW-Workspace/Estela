@@ -50,7 +50,30 @@ impl App {
                 } else {
                     Some(popover)
                 };
-                return self.configure_input();
+                let configure = self.configure_input();
+                if self.popover == Some(Popover::Microphone) && self.state == State::Ready {
+                    return Task::batch([
+                        configure,
+                        Task::perform(
+                            async { recording::microphones().map_err(|error| error.to_string()) },
+                            Message::Microphones,
+                        ),
+                    ]);
+                }
+                return configure;
+            }
+            Message::Microphones(result) => {
+                self.microphone_error = result.is_err();
+                self.microphones = result.unwrap_or_default();
+            }
+            Message::Microphone(input) if self.state == State::Ready => {
+                use recording::MicrophoneInput;
+                self.preferences.microphone_enabled = input != MicrophoneInput::Muted;
+                self.preferences.microphone_id = match input {
+                    MicrophoneInput::Device(id) => Some(id),
+                    _ => None,
+                };
+                self.save_preferences();
             }
             Message::Hint(hint) => {
                 if self.hint == hint {
@@ -110,7 +133,7 @@ impl App {
                     self.send(if self.resuming {
                         recording::Command::Resume
                     } else {
-                        recording::Command::Start
+                        recording::Command::StartWithMicrophone(self.preferences.microphone())
                     });
                     self.resuming = false;
                     self.state = State::Recording;

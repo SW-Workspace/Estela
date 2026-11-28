@@ -36,7 +36,6 @@
   "fullscreen": "Full screen",
   "countdown-setting": "3-second countdown",
   "fps": "Frame rate",
-  "silent": "Video only · microphone is not recorded in this phase",
   "shortcuts": "Ctrl+Shift+8  Record / stop     Ctrl+Shift+9  Pause / resume",
   "shortcuts-pending": "Waiting for global shortcut permission…",
   "shortcuts-failed": "Global shortcuts are unavailable. Full-screen recording requires shortcut permission to hide the controls safely.",
@@ -66,5 +65,7 @@
   "quit": "Quit Estela",
   "retry-shortcuts": "Retry shortcut permission",
   "shortcuts-ready": "Global shortcuts are ready. Screen controls hide during recording.",
-  "mute-microphone": "Mute microphone"
+  "default-microphone": "System default",
+  "microphone-unavailable": "Selected microphone unavailable",
+  "microphones-list-failed": "Could not list microphones."
 }
